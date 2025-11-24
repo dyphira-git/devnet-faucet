@@ -8,9 +8,9 @@
   integrity sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==
 
 "@adraffy/ens-normalize@^1.11.0":
-  version "1.11.0"
-  resolved "https://registry.npmjs.org/@adraffy/ens-normalize/-/ens-normalize-1.11.0.tgz"
-  integrity sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==
+  version "1.11.1"
+  resolved "https://registry.npmjs.org/@adraffy/ens-normalize/-/ens-normalize-1.11.1.tgz"
+  integrity sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==
 
 "@babel/helper-string-parser@^7.27.1":
   version "7.27.1"
@@ -55,6 +55,11 @@
     "@biomejs/cli-linux-x64-musl" "2.3.7"
     "@biomejs/cli-win32-arm64" "2.3.7"
     "@biomejs/cli-win32-x64" "2.3.7"
+
+"@biomejs/cli-linux-x64-musl@2.3.7":
+  version "2.3.7"
+  resolved "https://registry.npmjs.org/@biomejs/cli-linux-x64-musl/-/cli-linux-x64-musl-2.3.7.tgz"
+  integrity sha512-CQUtgH1tIN6e5wiYSJqzSwJumHYolNtaj1dwZGCnZXm2PZU1jOJof9TsyiP3bXNDb+VOR7oo7ZvY01If0W3iFQ==
 
 "@biomejs/cli-linux-x64@2.3.7":
   version "2.3.7"
@@ -916,6 +921,11 @@
   resolved "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.44.1.tgz"
   integrity sha512-EtnsrmZGomz9WxK1bR5079zee3+7a+AdFlghyd6VbAjgRJDbTANJ9dcPIPAi76uG05micpEL+gPGmAKYTschQw==
 
+"@rollup/rollup-linux-x64-musl@4.44.1":
+  version "4.44.1"
+  resolved "https://registry.npmjs.org/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.44.1.tgz"
+  integrity sha512-iAS4p+J1az6Usn0f8xhgL4PaU878KEtutP4hqw52I4IO6AGoyOkHCxcc4bqufv1tQLdDWFx8lR9YlwxKuv3/3g==
+
 "@safe-global/safe-apps-provider@~0.18.6", "@safe-global/safe-apps-provider@0.18.6":
   version "0.18.6"
   resolved "https://registry.npmjs.org/@safe-global/safe-apps-provider/-/safe-apps-provider-0.18.6.tgz"
@@ -1032,7 +1042,7 @@
   dependencies:
     "@tanstack/query-core" "5.90.10"
 
-"@tanstack/vue-query@^5.81.2", "@tanstack/vue-query@>=5.0.0":
+"@tanstack/vue-query@^5.81.2":
   version "5.81.5"
   resolved "https://registry.npmjs.org/@tanstack/vue-query/-/vue-query-5.81.5.tgz"
   integrity sha512-Ylt2pzRj1KyXOoidRemRoySU8ub3PXLKwGBr+iQxs6lhfvo1JlimTS2CANM2+3Uph+7JIIguFc8w0Mw3vSjVsw==
@@ -1291,18 +1301,6 @@
     "@walletconnect/ethereum-provider" "2.21.1"
     cbw-sdk "npm:@coinbase/wallet-sdk@3.9.3"
 
-"@wagmi/connectors@5.8.5":
-  version "5.8.5"
-  resolved "https://registry.npmjs.org/@wagmi/connectors/-/connectors-5.8.5.tgz"
-  integrity sha512-CHh4uYP6MziCMlSVXmuAv7wMoYWdxXliuzwCRAxHNNkgXE7z37ez5XzJu0Sm39NUau3Fl8WSjwKo4a4w9BOYNA==
-  dependencies:
-    "@coinbase/wallet-sdk" "4.3.3"
-    "@metamask/sdk" "0.32.0"
-    "@safe-global/safe-apps-provider" "0.18.6"
-    "@safe-global/safe-apps-sdk" "9.1.0"
-    "@walletconnect/ethereum-provider" "2.21.1"
-    cbw-sdk "npm:@coinbase/wallet-sdk@3.9.3"
-
 "@wagmi/connectors@7.0.1":
   version "7.0.1"
   resolved "https://registry.npmjs.org/@wagmi/connectors/-/connectors-7.0.1.tgz"
@@ -1316,14 +1314,6 @@
     eventemitter3 "5.0.1"
     mipd "0.0.7"
     zustand "5.0.0"
-
-"@wagmi/vue@^0.1.22":
-  version "0.1.22"
-  resolved "https://registry.npmjs.org/@wagmi/vue/-/vue-0.1.22.tgz"
-  integrity sha512-6PY9Mk1PXEoocJncR+X9OZ9MkC+/sdn82twa0tt7Jorxx0OdJoX0Yho1s9xbfSFo/iDbGFjU4j/RsAl2kr+Evw==
-  dependencies:
-    "@wagmi/connectors" "5.8.5"
-    "@wagmi/core" "2.17.3"
 
 "@wallet-standard/base@^1.1.0":
   version "1.1.0"
@@ -1769,10 +1759,20 @@ abbrev@^2.0.0:
   resolved "https://registry.npmjs.org/abbrev/-/abbrev-2.0.0.tgz"
   integrity sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ==
 
-abitype@^1.0.6, abitype@^1.0.8, abitype@1.0.8:
+abitype@^1.0.6, abitype@1.0.8:
   version "1.0.8"
   resolved "https://registry.npmjs.org/abitype/-/abitype-1.0.8.tgz"
   integrity sha512-ZeiI6h3GnW06uYDLx0etQtX/p8E24UaHHBj57RSjK7YBFe7iuVn07EDpOeP451D06sF27VOz9JJPlIKJmXgkEg==
+
+abitype@^1.0.9:
+  version "1.2.0"
+  resolved "https://registry.npmjs.org/abitype/-/abitype-1.2.0.tgz"
+  integrity sha512-fD3ROjckUrWsybaSor2AdWxzA0e/DSyV2dA4aYd7bd8orHsoJjl09fOgKfUkTDfk0BsDGBf4NBgu/c7JoS2Npw==
+
+abitype@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/abitype/-/abitype-1.1.0.tgz"
+  integrity sha512-6Vh4HcRxNMLA0puzPjM5GBgT4aAcFGKZzSgAXvuZ27shJP6NEpielTuqbBmZILR5/xd0PizkBGy5hReKz9jl5A==
 
 abort-controller@^3.0.0:
   version "3.0.0"
@@ -3923,18 +3923,18 @@ ox@0.7.1:
     abitype "^1.0.6"
     eventemitter3 "5.0.1"
 
-ox@0.8.1:
-  version "0.8.1"
-  resolved "https://registry.npmjs.org/ox/-/ox-0.8.1.tgz"
-  integrity sha512-e+z5epnzV+Zuz91YYujecW8cF01mzmrUtWotJ0oEPym/G82uccs7q0WDHTYL3eiONbTUEvcZrptAKLgTBD3u2A==
+ox@0.9.6:
+  version "0.9.6"
+  resolved "https://registry.npmjs.org/ox/-/ox-0.9.6.tgz"
+  integrity sha512-8SuCbHPvv2eZLYXrNmC0EC12rdzXQLdhnOMlHDW2wiCPLxBrOOJwX5L5E61by+UjTPOryqQiRSnjIKCI+GykKg==
   dependencies:
     "@adraffy/ens-normalize" "^1.11.0"
     "@noble/ciphers" "^1.3.0"
-    "@noble/curves" "^1.9.1"
+    "@noble/curves" "1.9.1"
     "@noble/hashes" "^1.8.0"
     "@scure/bip32" "^1.7.0"
     "@scure/bip39" "^1.6.0"
-    abitype "^1.0.8"
+    abitype "^1.0.9"
     eventemitter3 "5.0.1"
 
 p-limit@^2.2.0:
@@ -4972,19 +4972,19 @@ vary@^1, vary@~1.1.2:
   resolved "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-viem@^2.1.1, viem@^2.27.2, viem@^2.31.4, viem@>=2.29.0, viem@>=2.31.3, viem@2.x:
-  version "2.31.4"
-  resolved "https://registry.npmjs.org/viem/-/viem-2.31.4.tgz"
-  integrity sha512-0UZ/asvzl6p44CIBRDbwEcn3HXIQQurBZcMo5qmLhQ8s27Ockk+RYohgTLlpLvkYs8/t4UUEREAbHLuek1kXcw==
+viem@^2.1.1, viem@^2.27.2, viem@^2.40.1, viem@>=2.29.0, viem@>=2.31.3, viem@2.x:
+  version "2.40.1"
+  resolved "https://registry.npmjs.org/viem/-/viem-2.40.1.tgz"
+  integrity sha512-ml9tS+xJh3/Jy8hfBBePBBeK2rnecAUZenmAbumPJCt9xyRSmQN7aUCqZcusCegUnTnuhn8AOKcq422Oxxz7kA==
   dependencies:
-    "@noble/curves" "1.9.2"
+    "@noble/curves" "1.9.1"
     "@noble/hashes" "1.8.0"
     "@scure/bip32" "1.7.0"
     "@scure/bip39" "1.6.0"
-    abitype "1.0.8"
+    abitype "1.1.0"
     isows "1.0.7"
-    ox "0.8.1"
-    ws "8.18.2"
+    ox "0.9.6"
+    ws "8.18.3"
 
 viem@2.23.2:
   version "2.23.2"
@@ -5064,7 +5064,7 @@ vue-demi@^0.14.10:
   resolved "https://registry.npmjs.org/vue-demi/-/vue-demi-0.14.10.tgz"
   integrity sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==
 
-"vue@^2.6.0 || ^3.3.0", "vue@^3.0.0-0 || ^2.6.0", vue@^3.2.25, vue@^3.5.17, vue@>=3, vue@3.5.17:
+"vue@^2.6.0 || ^3.3.0", "vue@^3.0.0-0 || ^2.6.0", vue@^3.2.25, vue@^3.5.17, vue@3.5.17:
   version "3.5.17"
   resolved "https://registry.npmjs.org/vue/-/vue-3.5.17.tgz"
   integrity sha512-LbHV3xPN9BeljML+Xctq4lbz2lVHCR6DtbpTf5XIO6gugpXUN49j2QQPcMj086r9+AkJ0FfUT8xjulKKBkkr9g==
@@ -5214,6 +5214,11 @@ ws@8.18.2:
   resolved "https://registry.npmjs.org/ws/-/ws-8.18.2.tgz"
   integrity sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==
 
+ws@8.18.3:
+  version "8.18.3"
+  resolved "https://registry.npmjs.org/ws/-/ws-8.18.3.tgz"
+  integrity sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==
+
 xmlhttprequest-ssl@~2.1.1:
   version "2.1.2"
   resolved "https://registry.npmjs.org/xmlhttprequest-ssl/-/xmlhttprequest-ssl-2.1.2.tgz"
@@ -5262,7 +5267,7 @@ yargs@^15.3.1:
     y18n "^4.0.0"
     yargs-parser "^18.1.2"
 
-"zod@^3 >=3.22.0", zod@3.22.4:
+"zod@^3 >=3.22.0", "zod@^3.22.0 || ^4.0.0", zod@3.22.4:
   version "3.22.4"
   resolved "https://registry.npmjs.org/zod/-/zod-3.22.4.tgz"
   integrity sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==
