@@ -325,13 +325,13 @@ npm run deploy
 ```
 
 This will:
-1. ✅ Validate environment variables and dependencies
-2. 🔨 Compile Solidity contracts (requires Foundry)
-3. 🚀 Deploy ERC-20 tokens from `tokens.json`
-4. 🚀 Deploy AtomicMultiSend batch transfer contract
-5. ✅ Set token approvals for faucet wallet
-6. ✅ Verify all contracts are accessible
-7. 📝 Update `tokens.json` with deployed addresses
+Validate environment variables and dependencies
+Compile Solidity contracts (requires Foundry)
+Deploy ERC-20 tokens from `tokens.json`
+Deploy AtomicMultiSend batch transfer contract
+Set token approvals for faucet wallet
+Verify all contracts are accessible
+Update `tokens.json` with deployed addresses
 
 ### Manual Deployment Steps
 
@@ -432,66 +432,6 @@ When the devnet resets:
    ```bash
    npm start
    ```
-
-### Monitoring Checklist
-
-- ✅ Faucet wallet has sufficient native tokens for gas
-- ✅ Faucet wallet has ERC-20 tokens for distribution
-- ✅ RPC endpoints are accessible
-- ✅ Contracts are deployed and validated
-- ✅ Rate limiting database is not corrupted
-
-## Troubleshooting
-
-### Common Issues
-
-**"MNEMONIC environment variable not set"**
-```bash
-# Create .env file
-cp .env.example .env
-# Add your mnemonic to .env
-echo 'MNEMONIC="your twelve words here"' >> .env
-```
-
-**"Contract validation failed"**
-```bash
-# Redeploy contracts
-npm run deploy
-```
-
-**"Address derivation mismatch"**
-- Verify mnemonic is correct in `.env`
-- Ensure no extra spaces or quotes in mnemonic
-- Check that derivation path is `m/44'/60'/0'/0/0`
-
-**Build fails with viem errors**
-```bash
-# Update dependencies
-npm install viem@latest
-```
-
-**Frontend not loading**
-```bash
-# Rebuild frontend
-npm run build
-# Or start dev server
-npm run dev
-```
-
-**Rate limit database errors**
-```bash
-# Remove corrupted database
-rm -rf .faucet/*.db
-# Restart server
-npm start
-```
-
-### Logs
-
-- Server logs: Console output
-- Transaction history: Browser localStorage
-- Rate limiting: `.faucet/history.db`
-- Token allowances: `.faucet/allowances.db`
 
 ## Adding New Tokens
 
