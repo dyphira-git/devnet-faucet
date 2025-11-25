@@ -51,8 +51,6 @@
 import { ref } from 'vue';
 import { useTransactions } from '../composables/useTransactions';
 
-// biome-ignore lint/correctness/noUnusedVariables: used in template
 const activeTab = ref('faucet');
-// biome-ignore lint/correctness/noUnusedVariables: used in template
 const { recentTransactions } = useTransactions();
 </script>

@@ -187,7 +187,6 @@ import { useConfig } from '../../composables/useConfig';
 import { useTransactions } from '../../composables/useTransactions';
 import { useWalletStore } from '../../composables/useWalletStore';
 
-// biome-ignore lint/correctness/noUnusedVariables: disconnectKeplr used in template
 const { cosmosWallet, evmWallet, connectKeplr, disconnectKeplr, disconnectEvm } = useWalletStore();
 const { config } = useConfig();
 const { addTransactionToHistory } = useTransactions();
@@ -199,7 +198,6 @@ const disconnectAppKit = inject('disconnectAppKit');
 const address = ref('');
 const message = ref('');
 const isLoading = ref(false);
-// biome-ignore lint/correctness/noUnusedVariables: used in template
 const hoveringWallet = ref('');
 
 const bech32Prefix = computed(() => {

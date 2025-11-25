@@ -112,7 +112,6 @@ import { useConfig } from '../../composables/useConfig';
 import { useTransactions } from '../../composables/useTransactions';
 
 const { networkConfig } = useConfig();
-// biome-ignore lint/correctness/noUnusedVariables: all used in template
 const { recentTransactions, removeTransaction, clearAllTransactions } = useTransactions();
 
 const selectedTransaction = ref(null);
