@@ -183,6 +183,7 @@
 
 <script setup>
 import { computed, inject, ref } from 'vue';
+import FaucetBalances from '../FaucetBalances.vue';
 import { useConfig } from '../../composables/useConfig';
 import { useTransactions } from '../../composables/useTransactions';
 import { useWalletStore } from '../../composables/useWalletStore';
@@ -223,11 +224,11 @@ const addressType = computed(() => {
   return address.value.startsWith(prefix) ? 'Bech32' : 'EVM';
 });
 
-const _hasConnectedWallets = computed(() => {
+const hasConnectedWallets = computed(() => {
   return cosmosWallet.connected || evmWallet.connected;
 });
 
-const _addressMatchesWallet = computed(() => {
+const addressMatchesWallet = computed(() => {
   if (!address.value) return false;
   return (
     (cosmosWallet.connected && address.value === cosmosWallet.address) ||
@@ -235,24 +236,24 @@ const _addressMatchesWallet = computed(() => {
   );
 });
 
-const _connectedWalletType = computed(() => {
+const connectedWalletType = computed(() => {
   if (cosmosWallet.connected && address.value === cosmosWallet.address) return 'Keplr';
   if (evmWallet.connected && address.value === evmWallet.address) return 'EVM Wallet';
   return '';
 });
 
-const _formatAddress = (addr) => {
+const formatAddress = (addr) => {
   if (!addr) return '';
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 };
 
-const _useCosmosAddress = () => {
+const useCosmosAddress = () => {
   if (cosmosWallet.connected && cosmosWallet.address) {
     address.value = cosmosWallet.address;
   }
 };
 
-const _useEvmAddress = () => {
+const useEvmAddress = () => {
   if (evmWallet.connected && evmWallet.address) {
     address.value = evmWallet.address;
   }
@@ -262,7 +263,7 @@ const isMobile = () => {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 };
 
-const _handleCosmosConnect = async () => {
+const handleCosmosConnect = async () => {
   if (isMobile()) {
     // Check if we're in Keplr's in-app browser
     if (window.keplr) {
@@ -317,7 +318,7 @@ const _handleCosmosConnect = async () => {
   }
 };
 
-const _handleEvmConnect = () => {
+const handleEvmConnect = () => {
   // For both mobile and desktop, use the WalletConnect modal
   // which handles mobile wallets properly
   openModal();
@@ -348,14 +349,14 @@ const openModal = () => {
   }
 };
 
-const _handleEvmDisconnect = async () => {
+const handleEvmDisconnect = async () => {
   if (disconnectAppKit) {
     await disconnectAppKit();
   }
   disconnectEvm();
 };
 
-const _requestToken = async () => {
+const requestToken = async () => {
   if (!isValidAddress.value) {
     message.value = `
       <div class="alert alert-warning">

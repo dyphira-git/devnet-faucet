@@ -22,41 +22,25 @@ class SecureKeyManager {
       this._prefix = options.prefix;
     }
 
-    let privateKeyBytes;
-
-    // Support direct private key via PRIVATE_KEY env var (hex string without 0x)
-    const privateKeyHex = process.env.PRIVATE_KEY;
-    if (privateKeyHex) {
-      const cleanHex = privateKeyHex.replace(/^0x/, '');
-      if (!/^[0-9a-fA-F]{64}$/.test(cleanHex)) {
-        throw new Error('Invalid PRIVATE_KEY format. Must be 64 hex characters.');
-      }
-      privateKeyBytes = Buffer.from(cleanHex, 'hex');
-      console.log(' Using direct private key from PRIVATE_KEY env var');
-    } else {
-      // Fall back to mnemonic derivation
-      const mnemonic = process.env.MNEMONIC;
-      if (!mnemonic) {
-        throw new Error(
-          'MNEMONIC or PRIVATE_KEY environment variable required for wallet operations.'
-        );
-      }
-
-      if (!validateMnemonic(mnemonic)) {
-        throw new Error('Invalid mnemonic phrase provided');
-      }
-
-      const derivationPath = "m/44'/60'/0'/0/0";
-      const seed = mnemonicToSeedSync(mnemonic);
-      const root = bip32.fromSeed(seed);
-      const node = root.derivePath(derivationPath);
-
-      if (!node.privateKey) {
-        throw new Error('Failed to derive private key from mnemonic');
-      }
-
-      privateKeyBytes = node.privateKey;
+    const mnemonic = process.env.MNEMONIC;
+    if (!mnemonic) {
+      throw new Error('MNEMONIC environment variable not set. Required for wallet operations.');
     }
+
+    if (!validateMnemonic(mnemonic)) {
+      throw new Error('Invalid mnemonic phrase provided');
+    }
+
+    const derivationPath = "m/44'/60'/0'/0/0";
+    const seed = mnemonicToSeedSync(mnemonic);
+    const root = bip32.fromSeed(seed);
+    const node = root.derivePath(derivationPath);
+
+    if (!node.privateKey) {
+      throw new Error('Failed to derive private key from mnemonic');
+    }
+
+    const privateKeyBytes = node.privateKey;
     const publicKeyBytes = secp256k1.getPublicKey(privateKeyBytes, false);
     const publicKeyBytesCompressed = secp256k1.getPublicKey(privateKeyBytes, true);
 
