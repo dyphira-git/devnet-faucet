@@ -2,74 +2,85 @@
   <div>
     <!-- Loading indicator -->
     <div v-if="loadingBalances && address && isValid" class="text-center mb-3">
-      <div class="spinner-border spinner-border-sm text-primary" role="status">
-        <span class="visually-hidden">Loading balances...</span>
+      <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-r-transparent align-[-0.125em]" role="status">
+        <span class="sr-only">Loading balances...</span>
       </div>
-      <small class="text-muted ms-2">Checking token balances...</small>
+      <small class="text-gray-500 ml-2">Checking token balances...</small>
     </div>
     
     <!-- Token Information -->
     <div class="mb-4" v-if="config && config.tokens">
       <!-- Mobile compact view -->
-      <div class="mobile-token-list d-block d-md-none">
+      <div class="block md:hidden flex flex-col gap-2">
         <div v-for="token in allTokens" :key="token.denom">
           <div 
-            class="token-card-mobile" 
-            :class="[getTokenStatusClass(token), getHoverClass(token), { expanded: expandedTokens[token.denom] }]"
+            class="bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-lg transition-all duration-200 cursor-pointer" 
+            :class="[getTokenStatusClass(token), getHoverClass(token), { 'bg-black/20': expandedTokens[token.denom] }]"
             @click="toggleTokenExpansion(token.denom)"
           >
-            <div class="token-main">
-              <div class="token-left">
-                <span class="token-symbol">{{ getTokenSymbol(token) }}</span>
-                <span class="token-type-badge" :class="getTokenTypeBadgeClass(token)">
+            <div class="p-3 flex justify-between items-center relative">
+              <div class="flex items-center gap-2">
+                <span class="text-base font-semibold text-[var(--cosmos-accent)]">{{ getTokenSymbol(token) }}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-medium" :class="getTokenTypeBadgeClass(token)">
                   {{ getTokenType(token) }}
                 </span>
               </div>
-              <div class="token-right">
-                <div class="token-amount">{{ formatClaimableAmount(token) }}</div>
-                <div v-if="address && isValid" class="token-status-mobile">
-                  <span v-if="getTokenStatus(token) === 'available'" class="status-dot available"></span>
-                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="status-dot maxed"></span>
-                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="status-dot incompatible"></span>
+              <div class="flex items-center gap-3 mr-6">
+                <div class="text-sm font-medium text-right">{{ formatClaimableAmount(token) }}</div>
+                <div v-if="address && isValid" class="flex items-center">
+                  <span v-if="getTokenStatus(token) === 'available'" class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                 </div>
               </div>
-              <i class="fas fa-chevron-down expand-icon" :class="{ rotated: expandedTokens[token.denom] }"></i>
+              <i class="fas fa-chevron-down absolute right-4 text-xs text-[var(--text-secondary)] transition-transform duration-200" :class="{ 'rotate-180': expandedTokens[token.denom] }"></i>
             </div>
             
             <!-- Expanded Details -->
-            <div v-if="expandedTokens[token.denom]" class="token-expanded-details">
-              <div class="detail-row" v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'">
-                <span class="detail-label">Contract:</span>
-                <span class="detail-value" @click.stop="copyToClipboard(token.contract)">
+            <div v-if="expandedTokens[token.denom]" class="p-3 space-y-2 border-t border-[var(--border-color)] bg-black/20">
+              <div class="flex justify-between items-center mb-2 text-sm" v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'">
+                <span class="text-[var(--text-secondary)] font-medium">Contract:</span>
+                <span class="text-[var(--text-primary)] text-right cursor-pointer flex items-center gap-1 group" @click.stop="copyToClipboard(token.contract)">
                   {{ formatContractAddress(token.contract) }}
-                  <i class="fas fa-copy copy-icon-small"></i>
+                  <i class="fas fa-copy text-[10px] opacity-60 group-hover:opacity-100 transition-opacity"></i>
                 </span>
               </div>
-              <div class="detail-row" v-else-if="token.denom && token.denom.startsWith('ibc/')">
-                <span class="detail-label">IBC Denom:</span>
-                <span class="detail-value" @click.stop="copyToClipboard(token.denom)">
+              <div class="flex justify-between items-center mb-2 text-sm" v-else-if="token.denom && token.denom.startsWith('ibc/')">
+                <span class="text-[var(--text-secondary)] font-medium">IBC Denom:</span>
+                <span class="text-[var(--text-primary)] text-right cursor-pointer flex items-center gap-1 group" @click.stop="copyToClipboard(token.denom)">
                   {{ formatIbcDenom(token.denom) }}
-                  <i class="fas fa-copy copy-icon-small"></i>
+                  <i class="fas fa-copy text-[10px] opacity-60 group-hover:opacity-100 transition-opacity"></i>
                 </span>
               </div>
-              <div class="detail-row" v-if="tokenBalances[token.denom.toLowerCase()]">
-                <span class="detail-label">Your Balance:</span>
-                <span class="detail-value">
+              <div class="flex justify-between items-center mb-2 text-sm" v-if="tokenBalances[token.denom.toLowerCase()]">
+                <span class="text-[var(--text-secondary)] font-medium">Your Balance:</span>
+                <span class="text-[var(--text-primary)] text-right flex items-center gap-1">
                   {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }} 
                   {{ tokenBalances[token.denom.toLowerCase()].symbol || token.symbol }}
                 </span>
               </div>
-              <div class="detail-row" v-if="address && isValid">
-                <span class="detail-label">Status:</span>
-                <span class="detail-value">
-                  <span v-if="getTokenStatus(token) === 'available'" class="text-success">
-                    <i class="fas fa-check-circle me-1"></i>Will receive {{ formatClaimableAmount(token) }}
+              <div class="">
+                <div class="text-[0.95rem] text-[var(--text-primary)]">
+                  <strong>Claim: {{ formatClaimableAmount(token) }}</strong>
+                </div>
+                <div v-if="tokenBalances[token.denom.toLowerCase()]" class="mt-1">
+                  <small class="text-gray-500">
+                    Your Balance: {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }} 
+                    {{ tokenBalances[token.denom.toLowerCase()].symbol || token.symbol }}
+                  </small>
+                </div>
+              </div>
+              <div class="flex justify-between items-center text-sm" v-if="address && isValid">
+                <span class="text-[var(--text-secondary)] font-medium">Status:</span>
+                <span class="text-right flex items-center gap-1">
+                  <span v-if="getTokenStatus(token) === 'available'" class="text-green-500">
+                    <i class="fas fa-check-circle mr-1"></i>Will receive {{ formatClaimableAmount(token) }}
                   </span>
-                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-warning">
-                    <i class="fas fa-exclamation-circle me-1"></i>Already maxed
+                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-500">
+                    <i class="fas fa-exclamation-circle mr-1"></i>Already maxed
                   </span>
-                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-danger">
-                    <i class="fas fa-times-circle me-1"></i>{{ getIncompatibleReason(token) }}
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500">
+                    <i class="fas fa-times-circle mr-1"></i>{{ getIncompatibleReason(token) }}
                   </span>
                 </span>
               </div>
@@ -79,51 +90,51 @@
       </div>
       
       <!-- Desktop card view -->
-      <div class="row g-3 d-none d-md-flex">
-        <div v-for="token in allTokens" :key="token.denom" class="col-md-6 col-lg-4">
+      <div class="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div v-for="token in allTokens" :key="token.denom">
           <div 
-            class="token-card" 
+            class="bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-xl p-4 h-full transition-all duration-200 relative hover:-translate-y-0.5 hover:shadow-lg" 
             :class="[getTokenStatusClass(token), getHoverClass(token)]"
           >
-            <div class="token-header">
-              <div class="token-info">
-                <div class="token-symbol">{{ getTokenSymbol(token) }}</div>
-                <div class="token-name">{{ getTokenName(token) }}</div>
+            <div class="flex justify-between items-start mb-3">
+              <div class="flex-1">
+                <div class="text-lg font-semibold text-[var(--cosmos-accent)] mb-1">{{ getTokenSymbol(token) }}</div>
+                <div class="text-sm text-[var(--text-secondary)]">{{ getTokenName(token) }}</div>
               </div>
-              <span class="token-type-badge" :class="getTokenTypeBadgeClass(token)">
+              <span class="text-xs px-2 py-1 rounded font-medium" :class="getTokenTypeBadgeClass(token)">
                 {{ getTokenType(token) }}
               </span>
             </div>
             
-            <div class="token-details">
-              <div v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'" class="token-address">
+            <div class="mt-3">
+              <div v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'" class="flex items-center gap-2 mb-2 font-mono text-sm text-[var(--text-secondary)] group">
                 <span 
-                  class="address-text" 
+                  class="cursor-pointer transition-colors hover:text-[var(--cosmos-accent)]" 
                   @click="copyToClipboard(token.contract)"
                   :title="token.contract"
                 >
                   {{ formatContractAddress(token.contract) }}
                 </span>
-                <i class="fas fa-copy copy-icon"></i>
+                <i class="fas fa-copy text-xs opacity-50 transition-opacity group-hover:opacity-100"></i>
               </div>
-              <div v-else-if="token.denom && token.denom.startsWith('ibc/')" class="token-address">
+              <div v-else-if="token.denom && token.denom.startsWith('ibc/')" class="flex items-center gap-2 mb-2 font-mono text-sm text-[var(--text-secondary)] group">
                 <span 
-                  class="address-text" 
+                  class="cursor-pointer transition-colors hover:text-[var(--cosmos-accent)]" 
                   @click="copyToClipboard(token.denom)"
                   :title="token.denom"
                 >
                   {{ formatIbcDenom(token.denom) }}
                 </span>
-                <i class="fas fa-copy copy-icon"></i>
+                <i class="fas fa-copy text-xs opacity-50 transition-opacity group-hover:opacity-100"></i>
               </div>
               
               <!-- Token Amount and Balance -->
-              <div class="token-amounts">
-                <div class="token-amount">
+              <div class="mt-2">
+                <div class="text-[0.95rem] text-[var(--text-primary)]">
                   <strong>Claim: {{ formatClaimableAmount(token) }}</strong>
                 </div>
-                <div v-if="tokenBalances[token.denom.toLowerCase()]" class="token-balance">
-                  <small class="text-muted">
+                <div v-if="tokenBalances[token.denom.toLowerCase()]" class="mt-1">
+                  <small class="text-gray-500">
                     Your Balance: {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }} 
                     {{ tokenBalances[token.denom.toLowerCase()].symbol || token.symbol }}
                   </small>
@@ -131,15 +142,15 @@
               </div>
               
               <!-- Status Indicator -->
-              <div class="token-status mt-2" v-if="address && isValid">
-                <span v-if="getTokenStatus(token) === 'available'" class="status-text text-success">
-                  <i class="fas fa-check-circle me-1"></i>Will receive {{ formatClaimableAmount(token) }}
+              <div class="mt-2 text-sm" v-if="address && isValid">
+                <span v-if="getTokenStatus(token) === 'available'" class="font-medium text-green-500">
+                  <i class="fas fa-check-circle mr-1"></i>Will receive {{ formatClaimableAmount(token) }}
                 </span>
-                <span v-else-if="getTokenStatus(token) === 'maxed'" class="status-text text-warning">
-                  <i class="fas fa-exclamation-circle me-1"></i>Already maxed
+                <span v-else-if="getTokenStatus(token) === 'maxed'" class="font-medium text-yellow-500">
+                  <i class="fas fa-exclamation-circle mr-1"></i>Already maxed
                 </span>
-                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="status-text text-danger">
-                  <i class="fas fa-times-circle me-1"></i>{{ getIncompatibleReason(token) }}
+                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="font-medium text-red-500">
+                  <i class="fas fa-times-circle mr-1"></i>{{ getIncompatibleReason(token) }}
                 </span>
               </div>
             </div>
@@ -152,7 +163,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, toRaw } from 'vue';
 import { useConfig } from '../composables/useConfig';
 
 const props = defineProps({
@@ -167,6 +178,7 @@ const loadingBalances = ref(false);
 const copiedAddress = ref('');
 const expandedTokens = ref({});
 
+console.log('Line----170 FaucetBalances.vue', expandedTokens)
 const bech32Prefix = computed(() => {
   return (
     config.value?.network?.cosmos?.prefix ||
@@ -231,23 +243,23 @@ const getTokenStatusClass = (token) => {
   // Gray: incompatible or no address
 
   if (status === 'incompatible' || status === 'neutral' || !props.address) {
-    return { 'status-neutral': true };
+    return 'border-[var(--border-color)]';
   }
 
   if (status === 'maxed' || claimPercentage === 0) {
-    return { 'status-maxed': true };
+    return 'border-red-500';
   }
 
   if (claimPercentage >= 75) {
-    return { 'status-available': true };
+    return 'border-green-500';
   }
 
   if (claimPercentage >= 25) {
-    return { 'status-partial': true };
+    return 'border-yellow-400';
   }
 
   // Less than 25% - orange/warning color
-  return { 'status-minimal': true };
+  return 'border-orange-500';
 };
 
 const isNativeToken = (token) => {
@@ -268,8 +280,8 @@ const getTokenType = (token) => {
 
 const getTokenTypeBadgeClass = (token) => {
   const type = getTokenType(token);
-  if (type === 'native' || type === 'Native') return 'badge-native';
-  return 'badge-default';
+  if (type === 'native' || type === 'Native') return 'bg-[rgba(80,100,251,0.1)] text-[var(--cosmos-secondary)]';
+  return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]';
 };
 
 const formatContractAddress = (address) => {
@@ -342,7 +354,7 @@ const formatClaimableAmount = (token) => {
 const getHoverClass = (_token) => {
   if (!props.hoveringWallet) return '';
   // All native tokens are eligible for both address types
-  return 'token-hover-eligible';
+  return 'hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_6px_20px_rgba(0,255,136,0.3)] hover:border-[#00ff88] z-10';
 };
 
 const getIncompatibleReason = (_token) => {
@@ -369,7 +381,17 @@ const formatBalance = (amount, decimals = 0) => {
 };
 
 const toggleTokenExpansion = (denom) => {
-  expandedTokens.value[denom] = !expandedTokens.value[denom];
+  console.log('Line----373 FaucetBalances.vue', denom)
+  // Create a new object reference to ensure reactivity triggers
+  const newVal = !expandedTokens.value[denom];
+  console.log('Line----376 FaucetBalances.vue', {
+    ...expandedTokens.value,
+    [denom]: newVal
+  })
+  expandedTokens.value = {
+    ...expandedTokens.value,
+    [denom]: newVal
+  };
 };
 
 const copyToClipboard = async (text) => {
@@ -427,417 +449,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style scoped>
-.help-tip {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--cosmos-accent);
-  border-radius: 8px;
-  align-items: flex-start;
-}
-
-.help-icon {
-  color: var(--cosmos-accent);
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.help-content h6 {
-  color: var(--cosmos-accent);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.help-content p {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.help-content ul {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  padding-left: 1.5rem;
-}
-
-.help-content li {
-  margin-bottom: 0.25rem;
-}
-
-.token-card {
-  background: var(--bg-primary);
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1rem;
-  height: 100%;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.token-card.status-available {
-  border-color: #28a745;
-}
-
-.token-card.status-partial {
-  border-color: #ffc107;
-}
-
-.token-card.status-minimal {
-  border-color: #ff9800;
-}
-
-.token-card.status-maxed {
-  border-color: #dc3545;
-}
-
-.token-card.status-incompatible {
-  border-color: #dc3545;
-}
-
-.token-card.status-neutral {
-  border-color: var(--border-color);
-}
-
-.token-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 210, 255, 0.1);
-}
-
-.token-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
-
-.token-info {
-  flex: 1;
-}
-
-.token-symbol {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--cosmos-accent);
-  margin-bottom: 0.25rem;
-}
-
-.token-name {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.token-type-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.badge-native {
-  background: rgba(80, 100, 251, 0.1);
-  color: var(--cosmos-secondary);
-}
-
-.badge-default {
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-}
-
-.token-details {
-  margin-top: 0.75rem;
-}
-
-.token-address {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-family: monospace;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.address-text {
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.address-text:hover {
-  color: var(--cosmos-accent);
-}
-
-.copy-icon {
-  font-size: 0.75rem;
-  opacity: 0.5;
-  transition: opacity 0.2s ease;
-}
-
-.token-address:hover .copy-icon {
-  opacity: 1;
-}
-
-.token-amounts {
-  margin-top: 0.5rem;
-}
-
-.token-amount {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-}
-
-.token-balance {
-  margin-top: 0.25rem;
-}
-
-.token-status {
-  font-size: 0.85rem;
-}
-
-.status-text {
-  font-weight: 500;
-}
-
-.text-success {
-  color: #28a745;
-}
-
-.text-warning {
-  color: #ffc107;
-}
-
-.text-danger {
-  color: #dc3545;
-}
-
-/* Hover effect when hovering wallet in dropdown */
-.token-card.token-hover-eligible {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
-  border-color: #00ff88;
-  z-index: 10;
-}
-
-/* Mobile compact list view */
-.mobile-token-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.token-card-mobile {
-  background: var(--bg-primary);
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.token-main {
-  padding: 0.75rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-}
-
-.expand-icon {
-  position: absolute;
-  right: 1rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
-}
-
-.expand-icon.rotated {
-  transform: rotate(180deg);
-}
-
-.token-expanded-details {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.detail-row:last-child {
-  margin-bottom: 0;
-}
-
-.detail-label {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.detail-value {
-  color: var(--text-primary);
-  text-align: right;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.copy-icon-small {
-  font-size: 0.65rem;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.detail-value:hover .copy-icon-small {
-  opacity: 1;
-}
-
-.token-card-mobile.status-available {
-  border-color: #28a745;
-}
-
-.token-card-mobile.status-partial {
-  border-color: #ffc107;
-}
-
-.token-card-mobile.status-minimal {
-  border-color: #ff9800;
-}
-
-.token-card-mobile.status-maxed {
-  border-color: #dc3545;
-}
-
-.token-card-mobile.status-incompatible {
-  border-color: #dc3545;
-}
-
-.token-left {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.token-left .token-symbol {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--cosmos-accent);
-}
-
-.token-left .token-type-badge {
-  font-size: 0.65rem;
-  padding: 0.15rem 0.35rem;
-}
-
-.token-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-right: 1.5rem; /* Space for expand icon */
-}
-
-.token-right .token-amount {
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-align: right;
-}
-
-.token-status-mobile {
-  display: flex;
-  align-items: center;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.status-dot.available {
-  background-color: #28a745;
-}
-
-.status-dot.maxed {
-  background-color: #ffc107;
-}
-
-.status-dot.incompatible {
-  background-color: #dc3545;
-}
-
-/* Mobile card hover effect */
-.token-card-mobile.token-hover-eligible {
-  border-color: #00ff88;
-  background: rgba(0, 255, 136, 0.05);
-}
-
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  .token-card {
-    padding: 0.75rem;
-  }
-  
-  .token-symbol {
-    font-size: 1rem;
-  }
-  
-  .token-name {
-    font-size: 0.8rem;
-  }
-  
-  .token-type-badge {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.4rem;
-  }
-  
-  .token-address {
-    font-size: 0.75rem;
-  }
-  
-  .token-amount {
-    font-size: 0.85rem;
-  }
-  
-  .help-tip {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
-  
-  .help-icon {
-    font-size: 1.25rem;
-  }
-  
-  .help-content h6 {
-    font-size: 0.9rem;
-  }
-  
-  .help-content p {
-    font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .help-tip {
-    padding: 0.65rem;
-    font-size: 0.8rem;
-  }
-  
-  .help-icon {
-    font-size: 1.1rem;
-  }
-  
-  .help-content h6 {
-    font-size: 0.85rem;
-  }
-  
-  .help-content p {
-    font-size: 0.75rem;
-  }
-}
-</style>
