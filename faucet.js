@@ -95,6 +95,30 @@ function detectAddressType(address) {
   return 'unknown';
 }
 
+// Convert hex address to Cosmos bech32
+function _hexToCosmosAddress(hexAddress) {
+  try {
+    const addressBytes = Buffer.from(hexAddress.slice(2), 'hex');
+    const words = bech32.toWords(addressBytes);
+    return bech32.encode(conf.blockchain.sender.option.prefix, words);
+  } catch (error) {
+    console.error('Error converting hex to cosmos address:', error);
+    return null;
+  }
+}
+
+// Convert Cosmos bech32 to hex
+function _cosmosAddressToHex(cosmosAddress) {
+  try {
+    const { words } = bech32.decode(cosmosAddress);
+    const addressBytes = Buffer.from(bech32.fromWords(words));
+    return `0x${addressBytes.toString('hex')}`;
+  } catch (error) {
+    console.error('Error converting cosmos to hex address:', error);
+    return null;
+  }
+}
+
 // Get recipient balance for threshold checking
 async function getRecipientBalance(address, type) {
   try {
