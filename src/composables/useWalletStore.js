@@ -119,12 +119,12 @@ export function useWalletStore() {
           const gotPrefix = address.substring(0, address.indexOf('1'));
           console.warn(
             `Address prefix mismatch! Expected "${prefix}", got "${gotPrefix}". ` +
-            'Keplr has a cached chain config with the wrong prefix.'
+              'Keplr has a cached chain config with the wrong prefix.'
           );
           alert(
             `Keplr returned a "${gotPrefix}" address instead of "${prefix}". ` +
-            'Please remove "Republic AI Devnet" (or the old chain) from Keplr settings and try again.\n\n' +
-            'In Keplr: Settings > General > Manage Chain Visibility > find and remove the chain, then reconnect.'
+              'Please remove "Republic AI Devnet" (or the old chain) from Keplr settings and try again.\n\n' +
+              'In Keplr: Settings > General > Manage Chain Visibility > find and remove the chain, then reconnect.'
           );
           state.cosmosWallet.connecting = false;
           return;
