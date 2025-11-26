@@ -225,8 +225,13 @@ vercel env add MNEMONIC
 #### Fly.io
 ```bash
 curl -L https://fly.io/install.sh | sh
+fly apps create your-faucet-name
+fly secrets set MNEMONIC="your twelve word mnemonic phrase here"
 fly deploy
 ```
+
+**Required Fly.io Secrets:**
+- `MNEMONIC` - 12-word mnemonic phrase for wallet derivation (REQUIRED - app will not start without this)
 
 #### Docker
 ```bash
