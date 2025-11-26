@@ -65,11 +65,16 @@
   }
 }
 
+* {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 .header {
@@ -266,4 +271,81 @@ body {
 .lottie-animation-container {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Enhanced Responsive improvements */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .header {
+    padding: 0.75rem 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .transaction-item {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .info-card {
+    padding: 1rem;
+  }
+
+  .info-title {
+    font-size: 1rem;
+  }
+
+  .info-item {
+    padding: 0.4rem 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .info-label,
+  .info-value {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .info-card {
+    padding: 0.75rem;
+  }
+
+  .transaction-item {
+    padding: 0.5rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

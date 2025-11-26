@@ -113,10 +113,37 @@
       </div>
     </div>
     
-    <div v-else class="text-center py-4">
-      <i class="fas fa-history fa-3x text-[var(--text-secondary)] mb-3"></i>
-      <h5 class="text-[var(--text-secondary)] text-lg font-medium">No Recent Transactions</h5>
-      <p class="text-[var(--text-secondary)]">Your transaction history will appear here.</p>
+    <div v-else class="relative">
+      <div class="bg-gradient-to-br from-[#0D0F0F] to-[#0A0C0C] border-2 border-[#30FF6E]/20 rounded-2xl p-8 sm:p-12 text-center overflow-hidden">
+        <!-- Animated background glow -->
+        <div class="absolute inset-0 bg-gradient-to-br from-[#30FF6E]/5 to-transparent opacity-50 animate-pulse-subtle"></div>
+
+        <!-- Content -->
+        <div class="relative z-10">
+          <!-- Icon with neon glow -->
+          <div class="inline-block mb-6 relative">
+            <div class="absolute inset-0 blur-2xl bg-[#30FF6E]/30 rounded-full animate-pulse"></div>
+            <i class="fas fa-history relative text-5xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-[#30FF6E] to-[#C8FFD8]"></i>
+          </div>
+
+          <!-- Title -->
+          <h5 class="text-xl sm:text-2xl font-bold text-white mb-3">
+            No Recent Transactions
+          </h5>
+
+          <!-- Description -->
+          <p class="text-sm sm:text-base text-[#626C71] max-w-md mx-auto">
+            Your transaction history will appear here once you start requesting tokens from the faucet.
+          </p>
+
+          <!-- Decorative elements -->
+          <div class="mt-8 flex justify-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-[#30FF6E]/30 animate-pulse"></div>
+            <div class="w-2 h-2 rounded-full bg-[#30FF6E]/50 animate-pulse" style="animation-delay: 0.2s"></div>
+            <div class="w-2 h-2 rounded-full bg-[#30FF6E]/30 animate-pulse" style="animation-delay: 0.4s"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

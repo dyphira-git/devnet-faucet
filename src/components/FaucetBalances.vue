@@ -11,78 +11,61 @@
     <!-- Token Information -->
     <div class="mb-4" v-if="config && config.tokens">
       <!-- Mobile compact view -->
-      <div class="block md:hidden flex flex-col gap-2">
+      <div class="block md:hidden flex flex-col gap-2.5 px-1 sm:px-0">
         <div v-for="token in allTokens" :key="token.denom">
-          <div 
-            class="bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-lg transition-all duration-200 cursor-pointer" 
-            :class="[getTokenStatusClass(token), getHoverClass(token), { 'bg-black/20': expandedTokens[token.denom] }]"
+          <div
+            class="bg-gradient-to-br from-[#0D0F0F] to-[#0A0C0C] border-2 rounded-lg transition-all duration-300 cursor-pointer hover:shadow-[0_0_20px_rgba(48,255,110,0.15)] active:scale-[0.99]"
+            :class="[getTokenStatusClass(token), getHoverClass(token), { 'bg-black/30 shadow-[0_0_20px_rgba(48,255,110,0.25)] border-[#30FF6E]/50': expandedTokens[token.denom] }]"
             @click="toggleTokenExpansion(token.denom)"
           >
             <div class="p-3 flex justify-between items-center relative">
-              <div class="flex items-center gap-2">
-                <span class="text-base font-semibold text-[var(--cosmos-accent)]">{{ getTokenSymbol(token) }}</span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded font-medium" :class="getTokenTypeBadgeClass(token)">
+              <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                <span class="text-sm sm:text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#30FF6E] to-[#C8FFD8] truncate">{{ getTokenSymbol(token) }}</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold border whitespace-nowrap" :class="getTokenTypeBadgeClass(token)">
                   {{ getTokenType(token) }}
                 </span>
               </div>
-              <div class="flex items-center gap-3 mr-6">
-                <div class="text-sm font-medium text-right">{{ formatClaimableAmount(token) }}</div>
+              <div class="flex items-center gap-2 ml-2">
+                <div class="text-xs font-bold text-[#30FF6E] text-right whitespace-nowrap">{{ formatClaimableAmount(token) }}</div>
                 <div v-if="address && isValid" class="flex items-center">
-                  <span v-if="getTokenStatus(token) === 'available'" class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
-                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span>
-                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                  <span v-if="getTokenStatus(token) === 'available'" class="w-2 h-2 rounded-full bg-[#30FF6E] shadow-[0_0_8px_rgba(48,255,110,0.8)] animate-pulse-subtle inline-block"></span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)] inline-block"></span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] inline-block"></span>
                 </div>
               </div>
-              <i class="fas fa-chevron-down absolute right-4 text-xs text-[var(--text-secondary)] transition-transform duration-200" :class="{ 'rotate-180': expandedTokens[token.denom] }"></i>
+              <i class="fas fa-chevron-down ml-1.5 text-xs text-[#30FF6E] transition-transform duration-300" :class="{ 'rotate-180': expandedTokens[token.denom] }"></i>
             </div>
             
             <!-- Expanded Details -->
-            <div v-if="expandedTokens[token.denom]" class="p-3 space-y-2 border-t border-[var(--border-color)] bg-black/20">
-              <div class="flex justify-between items-center mb-2 text-sm" v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'">
-                <span class="text-[var(--text-secondary)] font-medium">Contract:</span>
-                <span class="text-[var(--text-primary)] text-right cursor-pointer flex items-center gap-1 group" @click.stop="copyToClipboard(token.contract)">
-                  {{ formatContractAddress(token.contract) }}
-                  <i class="fas fa-copy text-[10px] opacity-60 group-hover:opacity-100 transition-opacity"></i>
+            <div v-if="expandedTokens[token.denom]" class="p-3 space-y-2 border-t border-[#30FF6E]/20 bg-gradient-to-b from-black/40 to-black/20 backdrop-blur-sm">
+              <div v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'" class="flex items-center justify-between gap-2 text-[10px]">
+                <span class="text-[#626C71] font-semibold">Contract:</span>
+                <span class="text-white cursor-pointer flex items-center gap-1.5 group hover:text-[#30FF6E] transition-colors" @click.stop="copyToClipboard(token.contract)">
+                  <span class="font-mono">{{ formatContractAddress(token.contract) }}</span>
+                  <i class="fas fa-copy text-[9px] opacity-40 group-hover:opacity-100 group-hover:text-[#30FF6E] transition-all"></i>
                 </span>
               </div>
-              <div class="flex justify-between items-center mb-2 text-sm" v-else-if="token.denom && token.denom.startsWith('ibc/')">
-                <span class="text-[var(--text-secondary)] font-medium">IBC Denom:</span>
-                <span class="text-[var(--text-primary)] text-right cursor-pointer flex items-center gap-1 group" @click.stop="copyToClipboard(token.denom)">
-                  {{ formatIbcDenom(token.denom) }}
-                  <i class="fas fa-copy text-[10px] opacity-60 group-hover:opacity-100 transition-opacity"></i>
+              <div v-else-if="token.denom && token.denom.startsWith('ibc/')" class="flex items-center justify-between gap-2 text-[10px]">
+                <span class="text-[#626C71] font-semibold">IBC Denom:</span>
+                <span class="text-white cursor-pointer flex items-center gap-1.5 group hover:text-[#30FF6E] transition-colors" @click.stop="copyToClipboard(token.denom)">
+                  <span class="font-mono">{{ formatIbcDenom(token.denom) }}</span>
+                  <i class="fas fa-copy text-[9px] opacity-40 group-hover:opacity-100 group-hover:text-[#30FF6E] transition-all"></i>
                 </span>
               </div>
-              <div class="flex justify-between items-center mb-2 text-sm" v-if="tokenBalances[token.denom.toLowerCase()]">
-                <span class="text-[var(--text-secondary)] font-medium">Your Balance:</span>
-                <span class="text-[var(--text-primary)] text-right flex items-center gap-1">
-                  {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }} 
-                  {{ tokenBalances[token.denom.toLowerCase()].symbol || token.symbol }}
+              <div v-if="tokenBalances[token.denom.toLowerCase()]" class="flex items-center justify-between gap-2 text-[10px]">
+                <span class="text-[#626C71] font-semibold">Balance:</span>
+                <span class="text-white font-bold">
+                  {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }}
                 </span>
               </div>
-              <div class="">
-                <div class="text-[0.95rem] text-[var(--text-primary)]">
-                  <strong>Claim: {{ formatClaimableAmount(token) }}</strong>
-                </div>
-                <div v-if="tokenBalances[token.denom.toLowerCase()]" class="mt-1">
-                  <small class="text-gray-500">
-                    Your Balance: {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }} 
-                    {{ tokenBalances[token.denom.toLowerCase()].symbol || token.symbol }}
-                  </small>
-                </div>
-              </div>
-              <div class="flex justify-between items-center text-sm" v-if="address && isValid">
-                <span class="text-[var(--text-secondary)] font-medium">Status:</span>
-                <span class="text-right flex items-center gap-1">
-                  <span v-if="getTokenStatus(token) === 'available'" class="text-green-500">
-                    <i class="fas fa-check-circle mr-1"></i>Will receive {{ formatClaimableAmount(token) }}
-                  </span>
-                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-500">
-                    <i class="fas fa-exclamation-circle mr-1"></i>Already maxed
-                  </span>
-                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500">
-                    <i class="fas fa-times-circle mr-1"></i>{{ getIncompatibleReason(token) }}
-                  </span>
-                </span>
+              <div v-if="address && isValid" class="flex items-center gap-1.5 text-[10px] pt-1">
+                <span v-if="getTokenStatus(token) === 'available'" class="w-1.5 h-1.5 rounded-full bg-[#30FF6E] shadow-[0_0_8px_rgba(48,255,110,0.8)] animate-pulse-subtle flex-shrink-0"></span>
+                <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)] flex-shrink-0"></span>
+                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] flex-shrink-0"></span>
+
+                <span v-if="getTokenStatus(token) === 'available'" class="text-[#30FF6E] font-semibold">Available</span>
+                <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-400 font-semibold">Maxed</span>
+                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500 font-semibold">Incompatible</span>
               </div>
             </div>
           </div>
@@ -90,68 +73,56 @@
       </div>
       
       <!-- Desktop card view -->
-      <div class="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-3 gap-3 lg:gap-4">
         <div v-for="token in allTokens" :key="token.denom">
-          <div 
-            class="bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-xl p-4 h-full transition-all duration-200 relative hover:-translate-y-0.5 hover:shadow-lg" 
+          <div
+            class="bg-gradient-to-br from-[#0D0F0F] to-[#0A0C0C] border-2 rounded-xl p-3 lg:p-4 h-full transition-all duration-300 relative hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(48,255,110,0.25)] group cursor-default"
             :class="[getTokenStatusClass(token), getHoverClass(token)]"
           >
-            <div class="flex justify-between items-start mb-3">
-              <div class="flex-1">
-                <div class="text-lg font-semibold text-[var(--cosmos-accent)] mb-1">{{ getTokenSymbol(token) }}</div>
-                <div class="text-sm text-[var(--text-secondary)]">{{ getTokenName(token) }}</div>
-              </div>
-              <span class="text-xs px-2 py-1 rounded font-medium" :class="getTokenTypeBadgeClass(token)">
-                {{ getTokenType(token) }}
-              </span>
-            </div>
-            
-            <div class="mt-3">
-              <div v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'" class="flex items-center gap-2 mb-2 font-mono text-sm text-[var(--text-secondary)] group">
-                <span 
-                  class="cursor-pointer transition-colors hover:text-[var(--cosmos-accent)]" 
-                  @click="copyToClipboard(token.contract)"
-                  :title="token.contract"
-                >
-                  {{ formatContractAddress(token.contract) }}
-                </span>
-                <i class="fas fa-copy text-xs opacity-50 transition-opacity group-hover:opacity-100"></i>
-              </div>
-              <div v-else-if="token.denom && token.denom.startsWith('ibc/')" class="flex items-center gap-2 mb-2 font-mono text-sm text-[var(--text-secondary)] group">
-                <span 
-                  class="cursor-pointer transition-colors hover:text-[var(--cosmos-accent)]" 
-                  @click="copyToClipboard(token.denom)"
-                  :title="token.denom"
-                >
-                  {{ formatIbcDenom(token.denom) }}
-                </span>
-                <i class="fas fa-copy text-xs opacity-50 transition-opacity group-hover:opacity-100"></i>
-              </div>
-              
-              <!-- Token Amount and Balance -->
-              <div class="mt-2">
-                <div class="text-[0.95rem] text-[var(--text-primary)]">
-                  <strong>Claim: {{ formatClaimableAmount(token) }}</strong>
+            <!-- Neon glow effect on hover -->
+            <div class="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-[#30FF6E]/8 to-transparent pointer-events-none"></div>
+
+            <div class="relative z-10 space-y-2.5">
+              <!-- Header -->
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                  <div class="text-lg lg:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#30FF6E] to-[#C8FFD8] truncate">{{ getTokenSymbol(token) }}</div>
+                  <div class="text-xs text-[#626C71] font-medium truncate mt-0.5">{{ getTokenName(token) }}</div>
                 </div>
-                <div v-if="tokenBalances[token.denom.toLowerCase()]" class="mt-1">
-                  <small class="text-gray-500">
-                    Your Balance: {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }} 
-                    {{ tokenBalances[token.denom.toLowerCase()].symbol || token.symbol }}
-                  </small>
+                <span class="text-[10px] px-2 py-1 rounded-full font-bold border whitespace-nowrap flex-shrink-0" :class="getTokenTypeBadgeClass(token)">
+                  {{ getTokenType(token) }}
+                </span>
+              </div>
+
+              <!-- Contract/Denom (if exists) -->
+              <div v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'" class="flex items-center gap-1.5 font-mono text-[10px] text-[#626C71] group/copy cursor-pointer hover:text-[#30FF6E] transition-colors" @click="copyToClipboard(token.contract)" :title="token.contract">
+                <span class="truncate">{{ formatContractAddress(token.contract) }}</span>
+                <i class="fas fa-copy text-[9px] opacity-30 group-hover/copy:opacity-100 group-hover/copy:text-[#30FF6E] transition-all flex-shrink-0"></i>
+              </div>
+              <div v-else-if="token.denom && token.denom.startsWith('ibc/')" class="flex items-center gap-1.5 font-mono text-[10px] text-[#626C71] group/copy cursor-pointer hover:text-[#30FF6E] transition-colors" @click="copyToClipboard(token.denom)" :title="token.denom">
+                <span class="truncate">{{ formatIbcDenom(token.denom) }}</span>
+                <i class="fas fa-copy text-[9px] opacity-30 group-hover/copy:opacity-100 group-hover/copy:text-[#30FF6E] transition-all flex-shrink-0"></i>
+              </div>
+
+              <!-- Claim Amount -->
+              <div class="bg-[#30FF6E]/5 border border-[#30FF6E]/25 rounded-lg p-2.5 shadow-[0_0_15px_rgba(48,255,110,0.08)]">
+                <div class="text-sm font-bold text-white">
+                  <span class="text-[#30FF6E]">{{ formatClaimableAmount(token) }}</span>
+                </div>
+                <div v-if="tokenBalances[token.denom.toLowerCase()]" class="text-[10px] text-[#626C71] mt-1">
+                  Balance: <span class="text-white font-semibold">{{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }}</span>
                 </div>
               </div>
-              
+
               <!-- Status Indicator -->
-              <div class="mt-2 text-sm" v-if="address && isValid">
-                <span v-if="getTokenStatus(token) === 'available'" class="font-medium text-green-500">
-                  <i class="fas fa-check-circle mr-1"></i>Will receive {{ formatClaimableAmount(token) }}
-                </span>
-                <span v-else-if="getTokenStatus(token) === 'maxed'" class="font-medium text-yellow-500">
-                  <i class="fas fa-exclamation-circle mr-1"></i>Already maxed
-                </span>
-                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="font-medium text-red-500">
-                  <i class="fas fa-times-circle mr-1"></i>{{ getIncompatibleReason(token) }}
-                </span>
+              <div v-if="address && isValid" class="flex items-center gap-1.5 text-xs">
+                <span v-if="getTokenStatus(token) === 'available'" class="w-1.5 h-1.5 rounded-full bg-[#30FF6E] shadow-[0_0_8px_rgba(48,255,110,0.8)] animate-pulse-subtle flex-shrink-0"></span>
+                <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)] flex-shrink-0"></span>
+                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] flex-shrink-0"></span>
+
+                <span v-if="getTokenStatus(token) === 'available'" class="text-[#30FF6E] font-semibold text-[10px]">Available</span>
+                <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-400 font-semibold text-[10px]">Maxed</span>
+                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500 font-semibold text-[10px]">Incompatible</span>
               </div>
             </div>
           </div>
@@ -280,9 +251,10 @@ const getTokenType = (token) => {
 
 const getTokenTypeBadgeClass = (token) => {
   const type = getTokenType(token);
-  if (type === 'native' || type === 'Native')
-    return 'bg-[rgba(80,100,251,0.1)] text-[var(--cosmos-secondary)]';
-  return 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]';
+  if (type === 'native' || type === 'Native') {
+    return 'bg-[#30FF6E]/10 text-[#30FF6E] border-[#30FF6E]/30 shadow-[0_0_12px_rgba(48,255,110,0.3)]';
+  }
+  return 'bg-[#00D9FF]/10 text-[#00D9FF] border-[#00D9FF]/30 shadow-[0_0_12px_rgba(0,217,255,0.3)]';
 };
 
 const formatContractAddress = (address) => {

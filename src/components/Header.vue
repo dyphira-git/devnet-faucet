@@ -5,16 +5,6 @@
     </div>
     <div class="flex flex-row items-center gap-2">
       <Button 
-              @click="cosmosWallet.connected ? disconnectKeplr() : handleCosmosConnect()"
-      :class="cosmosWallet.connected 
-          ? 'border cursor-pointer border-[#FF6E6E40] bg-gradient-to-r from-[#1A0D0D] to-[#0F0A0A] text-[#FF6E6E] hover:text-white hover:border-[#FF6E6E]' 
-          : 'border cursor-pointer border-[#5E5E5E40] bg-gradient-to-r from-[#0D0F0F] to-[#0A0C0C] text-[#626C71] hover:text-white disabled:opacity-50'">
-          <i class="fas fa-atom"></i>
-        <span v-if="cosmosWallet.connected">Disconnect Keplr Wallet</span>
-        <span v-else-if="cosmosWallet.connecting">Connecting...</span>
-        <span v-else>Connect Keplr Wallet</span>
-      </Button>
-      <Button 
         @click="evmWallet.connected ? handleEvmDisconnect() : handleEvmConnect()" 
         :disabled="evmWallet.connecting" 
         :class="evmWallet.connected 

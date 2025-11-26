@@ -53,35 +53,43 @@
               </ButtonGroup>
             </template>
           </InputField>
-          <small v-if="isValidAddress" class="text-green-600">
-            <i class="fas fa-check-circle mr-1"></i>
+          <small v-if="isValidAddress" class="flex items-center gap-1 text-[#30FF6E] animate-pulse-subtle">
+            <i class="fas fa-check-circle"></i>
             Valid {{ addressType }} address
-            <span v-if="addressMatchesWallet" class="ml-1">
+            <span v-if="addressMatchesWallet" class="ml-1 text-[#C8FFD8]">
               <i class="fas fa-link"></i>
               ({{ connectedWalletType }})
             </span>
           </small>
-          <small v-else-if="address" class="text-red-600">
-            <i class="fas fa-exclamation-circle mr-1"></i>
+          <small v-else-if="address" class="flex items-center gap-1 text-red-500">
+            <i class="fas fa-exclamation-circle"></i>
             Invalid address format
           </small>
+
+<br/>
+          <!-- Faucet usage info -->
+          <div class="text-base font-normal text-[#626C71]">
+            <p class="text-xs sm:text-sm text-[#626C71] flex items-start gap-2">
+              <i class="text-base font-normal text-[#626C71]"></i>
+              <span>Logged when a wallet uses the faucet, then have them wait <span class="text-[#30FF6E] font-semibold">6 hours</span> before using it again.</span>
+            </p>
+          </div>
         </div>
         </div>
         
         <!-- Submit Button (only show if no wallets connected) -->
-        <Button 
+        <Button
           v-if="!hasConnectedWallets"
-          class="w-full text-white font-semibold cursor-pointer hover:opacity-80 hover:translate-y-[-1px]"
-          style="background: var(--cosmos-gradient)"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary hover:bg-primary/90 h-9 has-[>svg]:px-3 bg-linear-to-r w-full from-[#7CFFB5] to-[#00FF6F] text-black font-medium px-6 py-1 text-base rounded-full border-[#5E5E5E40] border hover:from-[#6EE6A3] hover:to-[#00E65A] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           @click="requestToken"
           :disabled="!isValidAddress || isLoading"
         >
-          <span v-if="isLoading">
-            <span class="loading-spinner mr-2"></span>
+          <span v-if="isLoading" class="flex items-center gap-2">
+            <span class="loading-spinner"></span>
             Processing...
           </span>
-          <span v-else>
-            <i class="fas fa-faucet mr-2"></i>
+          <span v-else class="flex items-center gap-2">
+            <i class="fas fa-faucet"></i>
             Request Tokens
           </span>
         </Button>

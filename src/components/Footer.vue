@@ -1,5 +1,5 @@
 <template>
-  <footer class="w-full bg-[url('../assets/images/footer-bg.png')] bg-center bg-no-repeat bg-contain">
+  <footer class="w-full bg-[url('../assets/images/footer2-bg.png')] bg-center bg-no-repeat bg-contain">
     <div class="flex justify-between">
       <Vue3Lottie
         :animationData="WireworkCorner"
@@ -35,7 +35,7 @@
     <div class="bg-top z-20 relative pt-52 2xl:pt-60 2xl:-mt-52 -mt-44 bg-cover bg-repeat-x sm:bg-[url('../assets/images/footer-base-bg.png')]">
       <div class="mx-auto pb-20 px-6 md:px-12 max-w-7xl gap-12 flex max-sm:flex-col justify-between">
         <!-- Brand Section -->
-        <div class="flex flex-col sm:w-1/3">
+        <div class="flex flex-col sm:w-1/3 overflow-visible">
           <CompanyLogo
             :width="115"
             :height="26"
@@ -46,17 +46,17 @@
             Powering the new order of computing.
           </p>
 
-          <div class="mt-5 sm:mt-4 flex items-center gap-3">
-            <a href="https://x.com/republicfdn" target="_blank">
+          <div class="button-icon-container mt-5 sm:mt-4 flex items-center gap-[0.75rem]">
+            <a href="https://x.com/republicfdn" target="_blank" class="button-icon inline-block hover:scale-110 transition-all duration-[150ms] hover:brightness-125">
               <XCircleIcon />
             </a>
-            <a href="https://github.com/RepublicAI" target="_blank">
+            <a href="https://github.com/RepublicAI" target="_blank" class="button-icon inline-block hover:scale-110 transition-all duration-[150ms] hover:brightness-125">
               <GithubCircleIcon />
             </a>
-            <a href="https://discord.com/invite/therepublic" target="_blank">
+            <a href="https://discord.com/invite/therepublic" target="_blank" class="button-icon inline-block hover:scale-110 transition-all duration-[150ms] hover:brightness-125">
               <TelegramCircleIcon />
             </a>
-            <a href="https://whitepaper.republicai.io/" target="_blank">
+            <a href="https://whitepaper.republicai.io/" target="_blank" class="button-icon inline-block hover:scale-110 transition-all duration-[150ms] hover:brightness-125">
               <DocumentCircleIcon />
             </a>
           </div>
