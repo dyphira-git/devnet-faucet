@@ -45,13 +45,6 @@
                   <i class="fas fa-copy copy-icon-small"></i>
                 </span>
               </div>
-              <div class="detail-row" v-else-if="token.denom && token.denom.startsWith('ibc/')">
-                <span class="detail-label">IBC Denom:</span>
-                <span class="detail-value" @click.stop="copyToClipboard(token.denom)">
-                  {{ formatIbcDenom(token.denom) }}
-                  <i class="fas fa-copy copy-icon-small"></i>
-                </span>
-              </div>
               <div class="detail-row" v-if="tokenBalances[token.denom.toLowerCase()]">
                 <span class="detail-label">Your Balance:</span>
                 <span class="detail-value">
@@ -97,22 +90,12 @@
             
             <div class="token-details">
               <div v-if="token.contract && token.contract !== '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'" class="token-address">
-                <span 
-                  class="address-text" 
+                <span
+                  class="address-text"
                   @click="copyToClipboard(token.contract)"
                   :title="token.contract"
                 >
                   {{ formatContractAddress(token.contract) }}
-                </span>
-                <i class="fas fa-copy copy-icon"></i>
-              </div>
-              <div v-else-if="token.denom && token.denom.startsWith('ibc/')" class="token-address">
-                <span 
-                  class="address-text" 
-                  @click="copyToClipboard(token.denom)"
-                  :title="token.denom"
-                >
-                  {{ formatIbcDenom(token.denom) }}
                 </span>
                 <i class="fas fa-copy copy-icon"></i>
               </div>
@@ -277,18 +260,9 @@ const formatContractAddress = (address) => {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 };
 
-const formatIbcDenom = (denom) => {
-  if (!denom) return '';
-  const parts = denom.split('/');
-  if (parts.length === 2 && parts[1].length > 8) {
-    return `${parts[0]}/...${parts[1].slice(-4)}`;
-  }
-  return denom;
-};
-
 const formatTokenAmount = (token) => {
   const amount = token.target_balance || token.amount || 0;
-  const formatted = formatBalance(amount, token.decimals || 0);
+  const formatted = formatBalance(amount, token.decimals || 18);
   const symbol = getTokenSymbol(token);
   return `${formatted} ${symbol}`;
 };
@@ -326,8 +300,8 @@ const getClaimableAmountRaw = (token) => {
 const formatClaimableAmount = (token) => {
   const claimable = getClaimableAmountRaw(token);
   const target = Number.parseFloat(token.target_balance || token.amount || 0);
-  const formattedClaimable = formatBalance(claimable, token.decimals || 0);
-  const formattedTarget = formatBalance(target, token.decimals || 0);
+  const formattedClaimable = formatBalance(claimable, token.decimals || 18);
+  const formattedTarget = formatBalance(target, token.decimals || 18);
   const symbol = getTokenSymbol(token);
 
   // If we're sending the full amount, just show that
@@ -349,7 +323,7 @@ const getIncompatibleReason = (_token) => {
   return 'Token not available';
 };
 
-const formatBalance = (amount, decimals = 0) => {
+const formatBalance = (amount, decimals = 18) => {
   if (!amount) return '0';
 
   try {
