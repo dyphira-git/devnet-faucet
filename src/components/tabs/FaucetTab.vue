@@ -111,6 +111,7 @@
 
 <script setup>
 import { computed, inject, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import { useConfig } from '../../composables/useConfig';
 import { useTransactions } from '../../composables/useTransactions';
 import { useWalletStore } from '../../composables/useWalletStore';
@@ -225,47 +226,57 @@ const openModal = () => {
 };
 
 const handleCosmosConnect = async () => {
+  // Check if Keplr is installed
+  if (!window.keplr) {
+    toast.error('Keplr Wallet Not Found', {
+      description: 'Keplr wallet extension is not installed in your browser.',
+      action: {
+        label: 'Install Keplr',
+        onClick: () => window.open('https://www.keplr.app/download', '_blank')
+      },
+      duration: 6000,
+    });
+    return;
+  }
+
   if (isMobile()) {
     if (window.keplr) {
       await connectKeplr(config.value?.network);
     } else {
-      message.value = `
-        <div class="bg-blue-900/50 border border-blue-500 rounded-lg p-4 mb-4 relative">
-          <h6 class="text-blue-300 font-semibold mb-2 flex items-center">
-            <i class="fas fa-mobile-alt mr-2"></i>Keplr Mobile Instructions
-          </h6>
-          <p class="text-blue-200 mb-3">To use your Keplr wallet:</p>
-          <ol class="text-blue-200 mb-3 ml-4 list-decimal">
-            <li>Open the Keplr app</li>
-            <li>Select your wallet</li>
-            <li>Copy your wallet address</li>
-            <li>Return here and paste it in the wallet address field above</li>
-          </ol>
-          <p class="text-blue-400 text-sm mb-0">
-            <i class="fas fa-info-circle mr-1"></i>
-            This devnet chain may not be listed in Keplr. Just copy your address manually.
-          </p>
-        </div>
-      `;
+      toast.info('Keplr Mobile Instructions', {
+        description: 'Open the Keplr app, select your wallet, copy your address, and paste it in the wallet address field.',
+        duration: 8000,
+      });
     }
   } else {
-    connectKeplr(config.value?.network);
+    await connectKeplr(config.value?.network);
   }
 };
 
 const handleEvmConnect = () => {
-  console.log('handleEvmConnect called, openAppKitModal:', openAppKitModal);
-  if (!openAppKitModal) {
-    message.value = `
-      <div class="bg-yellow-900/50 border border-yellow-500 rounded-lg p-4 mb-4">
-        <h6 class="text-yellow-300 font-semibold mb-2 flex items-center">
-          <i class="fas fa-exclamation-triangle mr-2"></i>Wallet Connection Unavailable
-        </h6>
-        <p class="text-yellow-200">EVM wallet connection is initializing. Please wait a moment and try again.</p>
-      </div>
-    `;
+  // Check if any EVM wallet provider is available
+  const hasWalletProvider = window.ethereum || openAppKitModal;
+
+  if (!hasWalletProvider) {
+    toast.error('EVM Wallet Not Found', {
+      description: 'No EVM wallet extension detected. Please install MetaMask, Coinbase Wallet, or Trust Wallet.',
+      action: {
+        label: 'Install MetaMask',
+        onClick: () => window.open('https://metamask.io/download/', '_blank')
+      },
+      duration: 6000,
+    });
     return;
   }
+
+  if (!openAppKitModal) {
+    toast.warning('Wallet Connection Unavailable', {
+      description: 'EVM wallet connection is initializing. Please wait a moment and try again.',
+      duration: 4000,
+    });
+    return;
+  }
+
   openModal();
 };
 

@@ -1,5 +1,6 @@
 <template>
   <div id="app" class="bg-black min-h-screen">
+    <Toaster position="top-right" :theme="'dark'" richColors />
     <Header />
     <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
       <h1 class="font-semibold text-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[80px] leading-[1.1] tracking-[-0.05em] mb-8 sm:mb-10 md:mb-12 mt-6 sm:mt-8 bg-[linear-gradient(260.47deg,#B4B4B4_48.52%,#FFFFFF_79.81%)] bg-clip-text text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] [text-shadow:0px_2px_3px_rgba(255,255,255,0.75)_inset,0px_1px_1px_rgba(255,255,255,1)_inset] px-2">
@@ -29,6 +30,7 @@
 
 <script setup>
 import { onMounted, provide, ref } from 'vue';
+import { Toaster } from 'vue-sonner';
 import FAQs from './components/FAQs.vue';
 import Footer from './components/Footer.vue';
 import Header from './components/Header.vue';
