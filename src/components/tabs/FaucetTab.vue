@@ -24,7 +24,7 @@
             @click="cosmosWallet.connected ? disconnectKeplr() : handleCosmosConnect()"
             :disabled="cosmosWallet.connecting || !config"
             :class="cosmosWallet.connected
-              ? 'border border-[#FF6E6E40] bg-gradient-to-r from-[#1A0D0D] to-[#0F0A0A] text-[#FF6E6E] hover:text-white hover:border-[#FF6E6E]'
+              ? 'border border-[#30FF6E40] bg-gradient-to-r from-[#0D1A0F] to-[#0A0F0A] text-[#30FF6E] hover:text-white hover:border-[#30FF6E]'
               : 'border border-[#5E5E5E40] bg-gradient-to-r from-[#0D0F0F] to-[#0A0C0C] text-[#626C71] hover:text-white disabled:opacity-50'"
             class="w-full justify-center"
           >
@@ -42,7 +42,7 @@
             @click="evmWallet.connected ? handleEvmDisconnect() : handleEvmConnect()"
             :disabled="evmWallet.connecting"
             :class="evmWallet.connected
-              ? 'border border-[#FF6E6E40] bg-gradient-to-r from-[#1A0D0D] to-[#0F0A0A] text-[#FF6E6E] hover:text-white hover:border-[#FF6E6E]'
+              ? 'border border-[#30FF6E40] bg-gradient-to-r from-[#0D1A0F] to-[#0A0F0A] text-[#30FF6E] hover:text-white hover:border-[#30FF6E]'
               : 'border border-[#5E5E5E40] bg-gradient-to-r from-[#0D0F0F] to-[#0A0C0C] text-[#626C71] hover:text-white disabled:opacity-50'"
             class="w-full justify-center"
           >
@@ -283,6 +283,18 @@ const handleCosmosConnect = async () => {
 };
 
 const handleEvmConnect = () => {
+  console.log('handleEvmConnect called, openAppKitModal:', openAppKitModal);
+  if (!openAppKitModal) {
+    message.value = `
+      <div class="bg-yellow-900/50 border border-yellow-500 rounded-lg p-4 mb-4">
+        <h6 class="text-yellow-300 font-semibold mb-2 flex items-center">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Wallet Connection Unavailable
+        </h6>
+        <p class="text-yellow-200">EVM wallet connection is initializing. Please wait a moment and try again.</p>
+      </div>
+    `;
+    return;
+  }
   openModal();
 };
 
