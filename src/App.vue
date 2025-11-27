@@ -67,7 +67,6 @@ provide('disconnectAppKit', disconnectAppKit);
 onMounted(async () => {
   try {
     await loadConfig();
-    // Only log essential info
     if (config.value?.network) {
       console.log('Faucet configured for network:', config.value.network.evm.chainId);
     }
@@ -77,10 +76,10 @@ onMounted(async () => {
   }
 
   if (config.value?.network) {
-    // Dynamically import wallet modules to avoid initialization errors
+    // Dynamically import wallet modules - use Vue-specific imports
     let createAppKit, WagmiAdapter;
     try {
-      const appkitModule = await import('@reown/appkit');
+      const appkitModule = await import('@reown/appkit/vue');
       const wagmiModule = await import('@reown/appkit-adapter-wagmi');
       createAppKit = appkitModule.createAppKit;
       WagmiAdapter = wagmiModule.WagmiAdapter;
@@ -89,16 +88,18 @@ onMounted(async () => {
       return;
     }
 
-    // Check if mobile
-    const _isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || '2f30532234e2903b2cf2505d144089ac';
+    const chainId = config.value.network.evm.chainId;
 
-    // Configure custom network based on config
+    // Configure custom network with required fields for AppKit
     const customNetwork = {
-      id: config.value.network.evm.chainId,
+      id: chainId,
       name: 'Republic AI Devnet',
+      caipNetworkId: `eip155:${chainId}`,
+      chainNamespace: 'eip155',
       nativeCurrency: {
-        name: 'ATOM',
-        symbol: 'ATOM',
+        name: 'RAI',
+        symbol: 'RAI',
         decimals: 18,
       },
       rpcUrls: {
@@ -115,55 +116,33 @@ onMounted(async () => {
       testnet: true,
     };
 
-    // Create metadata
     const metadata = {
       name: 'Republic AI Devnet Faucet',
       description: 'Token distribution faucet for Republic AI Devnet',
-      url: 'https://faucet.republicai.io',
-      icons: ['https://faucet.republicai.io/favicon.svg'],
+      url: window.location.origin,
+      icons: [`${window.location.origin}/favicon.svg`],
     };
 
     // Create Wagmi adapter
     const wagmiAdapter = new WagmiAdapter({
       networks: [customNetwork],
-      projectId: import.meta.env.VITE_REOWN_PROJECT_ID || '2f30532234e2903b2cf2505d144089ac',
+      projectId,
     });
 
-    // Create AppKit modal with enhanced error handling
+    // Create AppKit modal
     try {
-      // Check for conflicting wallet extensions
-      try {
-        if (window.ethereum) {
-          // Log available providers
-          const providers = window.ethereum.providers || [window.ethereum];
-          console.log(`Found ${providers.length} wallet provider(s)`);
-
-          // If multiple providers exist, try to find MetaMask or a preferred one
-          if (window.ethereum.providers && window.ethereum.providers.length > 1) {
-            console.warn('Multiple wallet providers detected. This may cause connection issues.');
-            showWalletWarning.value = true;
-            // Try to find MetaMask specifically
-            const metamaskProvider = window.ethereum.providers.find(
-              (p) => p.isMetaMask && !p.isBraveWallet
-            );
-            if (metamaskProvider) {
-              console.log('Using MetaMask provider');
-            }
-          }
-        }
-      } catch (providerError) {
-        console.warn('Error checking wallet providers:', providerError.message);
-        // The error about "Cannot set property ethereum" is expected when multiple wallets conflict
-        if (providerError.message.includes('Cannot set property ethereum')) {
-          showWalletWarning.value = true;
-        }
+      // Check for multiple wallet providers
+      if (window.ethereum?.providers && window.ethereum.providers.length > 1) {
+        console.warn('Multiple wallet providers detected');
+        showWalletWarning.value = true;
       }
 
       const appKitInstance = createAppKit({
         adapters: [wagmiAdapter],
         networks: [customNetwork],
-        projectId: import.meta.env.VITE_REOWN_PROJECT_ID || '2f30532234e2903b2cf2505d144089ac',
+        projectId,
         metadata,
+        defaultNetwork: customNetwork,
         features: {
           analytics: false,
           email: false,
@@ -171,51 +150,16 @@ onMounted(async () => {
           swaps: false,
           onramp: false,
         },
-        // Mobile-optimized configuration
-        defaultChain: customNetwork,
-        allowUnsupportedChain: true,
-        // Add additional config to handle multiple wallets
-        walletConnectConfig: {
-          // Prefer injected wallets when multiple are available
-          qrModalOptions: {
-            themeVariables: {
-              '--wcm-z-index': '10000',
-            },
-            // Mobile-specific options
-            mobileWallets: [
-              {
-                id: 'metamask',
-                name: 'MetaMask',
-                links: {
-                  native: 'metamask://',
-                  universal: 'https://metamask.app.link',
-                },
-              },
-              {
-                id: 'trust',
-                name: 'Trust Wallet',
-                links: {
-                  native: 'trust://',
-                  universal: 'https://link.trustwallet.com',
-                },
-              },
-            ],
-          },
-        },
       });
 
-      // Update the ref value
       modal.value = appKitInstance;
       console.log('Wallet connector initialized');
     } catch (error) {
       console.error('Failed to create AppKit modal:', error);
-      // Don't let initialization failure break the app
-      console.warn('Wallet connection may be limited due to initialization error');
     }
 
     // Subscribe to account changes
     if (modal.value) {
-      // Debounce to prevent duplicate events
       let updateTimeout = null;
       const updateWalletState = (isConnected, address, chainId) => {
         clearTimeout(updateTimeout);
@@ -229,28 +173,20 @@ onMounted(async () => {
             walletStore.evmWallet.connected = false;
             walletStore.evmWallet.address = null;
             walletStore.evmWallet.chainId = null;
-            console.log('EVM wallet disconnected');
           }
         }, 100);
       };
 
-      // Subscribe to account changes
       if (modal.value.subscribeAccount) {
         modal.value.subscribeAccount((account) => {
-          // Only log significant changes
-          if (account.status === 'connected' || account.status === 'disconnected') {
-            console.log('Account status:', account.status, account.address);
-          }
           updateWalletState(account.isConnected, account.address, account.chainId);
         });
       }
 
-      // Check initial state after a brief delay
       setTimeout(() => {
-        if (modal.value.getAccount) {
+        if (modal.value?.getAccount) {
           const account = modal.value.getAccount();
           if (account?.isConnected && account.address) {
-            console.log('Initial account connected:', account.address);
             updateWalletState(true, account.address, account.chainId);
           }
         }
