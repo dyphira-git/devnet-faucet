@@ -131,10 +131,12 @@ onMounted(async () => {
       icons: [`${window.location.origin}/favicon.svg`],
     };
 
-    // Create Wagmi adapter
+    // Create Wagmi adapter - disable legacy injected to use EIP-6963 for multi-wallet
     const wagmiAdapter = new WagmiAdapter({
       networks: [customNetwork],
       projectId,
+      enableInjected: false,
+      enableEIP6963: true,
     });
 
     // Create AppKit modal
@@ -151,6 +153,8 @@ onMounted(async () => {
         projectId,
         metadata,
         defaultNetwork: customNetwork,
+        enableWalletGuide: true,
+        enableReconnect: false,
         features: {
           analytics: false,
           email: false,
@@ -169,15 +173,21 @@ onMounted(async () => {
     // Subscribe to account changes
     if (modal.value) {
       let updateTimeout = null;
+      let lastAddress = null;
       const updateWalletState = (isConnected, address, chainId) => {
         clearTimeout(updateTimeout);
         updateTimeout = setTimeout(() => {
           if (isConnected && address) {
+            // Only log if address changed
+            if (address !== lastAddress) {
+              console.log('EVM wallet connected:', address);
+              lastAddress = address;
+            }
             walletStore.evmWallet.connected = true;
             walletStore.evmWallet.address = address;
             walletStore.evmWallet.chainId = chainId;
-            console.log('EVM wallet connected:', address);
           } else {
+            lastAddress = null;
             walletStore.evmWallet.connected = false;
             walletStore.evmWallet.address = null;
             walletStore.evmWallet.chainId = null;

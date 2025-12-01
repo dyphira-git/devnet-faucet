@@ -53,7 +53,7 @@
     "@tailwindcss/vite": "^4.1.17",
     "@tanstack/vue-query": "^5.75.4",
     "@vueuse/core": "^14.0.0",
-    "@wagmi/vue": "^0.1.20",
+    "@wagmi/vue": "^0.4.2",
     "bech32": "^2.0.0",
     "bip32": "^5.0.0-rc.0",
     "bip39": "^3.1.0",
