@@ -3,17 +3,32 @@ name: CI
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '.gitignore'
-      - '.github/dependabot.yml'
-      - 'docs/**'
 
 jobs:
-  build:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'public/**'
+              - 'package.json'
+              - 'yarn.lock'
+              - 'vite.config.js'
+              - 'Dockerfile'
+              - 'faucet.js'
+              - 'config.js'
 
+  build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,3 +56,22 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t devnet-faucet:${{ github.sha }} --no-cache .
+
+  # Required check that always passes - use this in branch protection
+  ci-complete:
+    runs-on: ubuntu-latest
+    needs: [changes, build]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          if [[ "${{ needs.changes.outputs.code }}" != "true" ]]; then
+            echo "No code changes, skipping build"
+            exit 0
+          fi
+          if [[ "${{ needs.build.result }}" == "success" ]]; then
+            echo "Build passed"
+            exit 0
+          fi
+          echo "Build failed"
+          exit 1
