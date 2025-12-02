@@ -67,7 +67,9 @@ const corsOptions = {
 if (process.env.NODE_ENV === 'production') {
   const staticPath = path.join(__dirname, 'dist');
   console.log('[STATIC] Serving static files from:', staticPath);
-  app.use(express.static(staticPath, { maxAge: '1h' }));
+  // Cache hashed assets (js/css) for 1 year, no cache for HTML
+  app.use('/assets', express.static(path.join(staticPath, 'assets'), { maxAge: '1y' }));
+  app.use(express.static(staticPath, { maxAge: 0 }));
 }
 
 app.use(cors(corsOptions));
