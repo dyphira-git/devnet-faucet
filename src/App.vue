@@ -29,6 +29,9 @@
 </template>
 
 <script setup>
+import { createAppKit } from '@reown/appkit';
+import { defineChain } from '@reown/appkit/networks';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { onMounted, provide, ref } from 'vue';
 import { Toaster } from 'vue-sonner';
 import FAQs from './components/FAQs.vue';
@@ -78,22 +81,6 @@ onMounted(async () => {
   }
 
   if (config.value?.network) {
-    // Dynamically import wallet modules
-    let createAppKit;
-    let WagmiAdapter;
-    let defineChain;
-    try {
-      const appkitModule = await import('@reown/appkit/vue');
-      const networksModule = await import('@reown/appkit/networks');
-      const wagmiModule = await import('@reown/appkit-adapter-wagmi');
-      createAppKit = appkitModule.createAppKit;
-      defineChain = networksModule.defineChain;
-      WagmiAdapter = wagmiModule.WagmiAdapter;
-    } catch (importError) {
-      console.error('Failed to load wallet modules:', importError);
-      return;
-    }
-
     const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || '2f30532234e2903b2cf2505d144089ac';
     const chainId = config.value.network.evm.chainId;
     const rpcUrl = config.value.network.evm.rpc;
