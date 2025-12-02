@@ -17,7 +17,14 @@ export default defineConfig({
     stringify: true,
   },
   optimizeDeps: {
-    include: ['@reown/appkit', '@reown/appkit-adapter-wagmi', '@wagmi/core', 'wagmi', 'viem'],
+    include: [
+      '@reown/appkit',
+      '@reown/appkit/networks',
+      '@reown/appkit-adapter-wagmi',
+      '@wagmi/core',
+      'wagmi',
+      'viem',
+    ],
     exclude: [],
   },
   build: {
@@ -29,28 +36,9 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
       },
       output: {
+        inlineDynamicImports: true,
         entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
-        manualChunks: {
-          'vue-vendor': ['vue', '@tanstack/vue-query'],
-          'cosmos-vendor': [
-            '@cosmjs/crypto',
-            '@cosmjs/encoding',
-            '@cosmjs/proto-signing',
-            '@cosmjs/stargate',
-            'cosmjs-types',
-          ],
-          'crypto-vendor': [
-            'bip39',
-            'bip32',
-            'tiny-secp256k1',
-            '@noble/curves',
-            '@noble/hashes',
-            'bech32',
-          ],
-          'utils-vendor': ['ethers', 'long'],
-        },
       },
     },
   },
