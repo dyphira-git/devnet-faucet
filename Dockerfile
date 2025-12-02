@@ -24,7 +24,7 @@ COPY . .
 # Build the Vite frontend with environment variables
 ARG VITE_REOWN_PROJECT_ID
 ENV VITE_REOWN_PROJECT_ID=${VITE_REOWN_PROJECT_ID}
-RUN npm run build
+RUN yarn build
 
 # Now install only production dependencies
 RUN rm -rf node_modules && \
