@@ -161,7 +161,6 @@ const loadingBalances = ref(false);
 const copiedAddress = ref('');
 const expandedTokens = ref({});
 
-console.log('Line----170 FaucetBalances.vue', expandedTokens);
 const bech32Prefix = computed(() => {
   return (
     config.value?.network?.cosmos?.prefix ||
@@ -365,13 +364,7 @@ const formatBalance = (amount, decimals = 18) => {
 };
 
 const toggleTokenExpansion = (denom) => {
-  console.log('Line----373 FaucetBalances.vue', denom);
-  // Create a new object reference to ensure reactivity triggers
   const newVal = !expandedTokens.value[denom];
-  console.log('Line----376 FaucetBalances.vue', {
-    ...expandedTokens.value,
-    [denom]: newVal,
-  });
   expandedTokens.value = {
     ...expandedTokens.value,
     [denom]: newVal,
