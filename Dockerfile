@@ -13,10 +13,10 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json yarn.lock ./
 
 # Install ALL dependencies (including dev) for building
-RUN npm install
+RUN yarn install
 
 # Copy source files needed for build
 COPY . .
@@ -28,7 +28,7 @@ RUN npm run build
 
 # Now install only production dependencies
 RUN rm -rf node_modules && \
-    npm install --omit=dev
+    yarn install --production
 
 # Production stage
 FROM node:20-alpine
@@ -53,7 +53,7 @@ ENV NODE_ENV=production
 # Copy from builder
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --chown=nodejs:nodejs package.json package-lock.json ./
+COPY --chown=nodejs:nodejs package.json yarn.lock ./
 COPY --chown=nodejs:nodejs faucet.js config.js ./
 COPY --chown=nodejs:nodejs src ./src
 
