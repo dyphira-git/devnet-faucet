@@ -42,15 +42,15 @@ jobs:
         run: yarn install
 
       - name: Run linter
-        run: npm run lint
+        run: yarn lint
 
       - name: Run tests
-        run: npm test
+        run: yarn test
         env:
           MNEMONIC: "test test test test test test test test test test test junk"
 
       - name: Build frontend
-        run: npm run build
+        run: yarn build
         env:
           VITE_REOWN_PROJECT_ID: ${{ secrets.VITE_REOWN_PROJECT_ID }}
 
