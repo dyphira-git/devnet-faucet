@@ -544,16 +544,32 @@ async function sendEvmNativeTokens(recipientAddress, amount) {
   const privateKey = getPrivateKey();
   const wallet = new Wallet(privateKey, ethProvider);
 
-  // Use the calculated top-up amount
-  const sendAmount = BigInt(amount);
+  // Estimate gas cost to reserve from faucet balance
+  const feeData = await ethProvider.getFeeData();
+  const gasLimit = BigInt(chainConf.tx.fee.evm.gasLimit || '21000');
+  const gasPrice = feeData.gasPrice || BigInt(chainConf.tx.fee.evm.gasPrice || '20000000000');
+  const estimatedGasCost = gasLimit * gasPrice;
 
   const faucetBalance = await ethProvider.getBalance(wallet.address);
   console.log(`Faucet balance: ${faucetBalance.toString()} wei`);
+  console.log(`Estimated gas cost: ${estimatedGasCost.toString()} wei`);
+
+  // Calculate max sendable amount (balance minus gas reserve)
+  const maxSendable =
+    faucetBalance > estimatedGasCost ? faucetBalance - estimatedGasCost : BigInt(0);
+
+  // Use the smaller of requested amount or max sendable
+  let sendAmount = BigInt(amount);
+  if (sendAmount > maxSendable) {
+    console.log(`Capping send amount from ${sendAmount} to ${maxSendable} (reserving gas)`);
+    sendAmount = maxSendable;
+  }
+
   console.log(`Sending amount: ${sendAmount.toString()} wei`);
 
-  if (faucetBalance < sendAmount) {
+  if (sendAmount <= BigInt(0)) {
     throw new Error(
-      `Insufficient faucet balance. Has ${faucetBalance.toString()} wei, needs ${sendAmount.toString()} wei`
+      `Insufficient faucet balance. Has ${faucetBalance.toString()} wei, needs gas reserve of ${estimatedGasCost.toString()} wei`
     );
   }
 
