@@ -28,7 +28,7 @@
         class="bg-gradient-to-r px-2 from-[#0D0F0F] to-[#0A0C0C] border border-[#5E5E5E40] rounded-xl"
         :value="`item-${index + 1}`"
       >
-        <AccordionTrigger class="text-[#626C71] font-semibold md:text-lg sm:text-base xs:text-sm">
+        <AccordionTrigger class="text-[#626C71] font-semibold md:text-lg sm:text-base xs:text-sm hover:text-[#C8FFD8] hover:underline hover:underline-offset-4 hover:[text-shadow:0_0_10px_rgba(200,255,216,0.5)] transition-all duration-300">
           {{ faq.question }}
         </AccordionTrigger>
         <AccordionContent>
