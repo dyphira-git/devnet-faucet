@@ -67,7 +67,7 @@ jobs:
         run: |
           PREVIEW_APP="${{ env.FLY_APP }}-pr-${{ github.event.pull_request.number }}"
           if ! flyctl apps list | grep -q "$PREVIEW_APP"; then
-            flyctl apps create "$PREVIEW_APP" --org personal
+            flyctl apps create "$PREVIEW_APP" --org dyphira-git
           fi
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
