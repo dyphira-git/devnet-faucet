@@ -1,0 +1,196 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-${{ github.head_ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+  deployments: write
+
+env:
+  FLY_APP: republic-devnet-faucet
+
+jobs:
+  check-and-deploy:
+    name: preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Run tests
+        run: yarn test
+        env:
+          MNEMONIC: "test test test test test test test test test test test junk"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Fly Registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.fly.io
+          username: x
+          password: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: registry.fly.io/${{ env.FLY_APP }}:${{ github.event.pull_request.head.sha }}
+          build-args: |
+            VITE_REOWN_PROJECT_ID=${{ secrets.VITE_REOWN_PROJECT_ID }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Create preview app if needed
+        run: |
+          PREVIEW_APP="${{ env.FLY_APP }}-pr-${{ github.event.pull_request.number }}"
+          if ! flyctl apps list | grep -q "$PREVIEW_APP"; then
+            flyctl apps create "$PREVIEW_APP" --org personal
+          fi
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy preview
+        run: |
+          PREVIEW_APP="${{ env.FLY_APP }}-pr-${{ github.event.pull_request.number }}"
+
+          cat > fly.preview.toml << EOF
+          app = "$PREVIEW_APP"
+          primary_region = "iad"
+
+          [build]
+            dockerfile = "Dockerfile"
+
+          [env]
+            NODE_ENV = "production"
+            PORT = "8088"
+
+          [[services]]
+            internal_port = 8088
+            processes = ["app"]
+            protocol = "tcp"
+
+            [services.concurrency]
+              hard_limit = 25
+              soft_limit = 20
+              type = "connections"
+
+            [[services.ports]]
+              force_https = true
+              handlers = ["http"]
+              port = 80
+
+            [[services.ports]]
+              handlers = ["tls", "http"]
+              port = 443
+
+            [[services.http_checks]]
+              interval = "30s"
+              grace_period = "10s"
+              method = "get"
+              path = "/health"
+              protocol = "http"
+              timeout = "5s"
+
+          [[vm]]
+            memory = "256mb"
+            cpu_kind = "shared"
+            cpus = 1
+          EOF
+
+          flyctl deploy --app "$PREVIEW_APP" --config fly.preview.toml --image registry.fly.io/${{ env.FLY_APP }}:${{ github.event.pull_request.head.sha }} --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Set preview secrets
+        run: |
+          PREVIEW_APP="${{ env.FLY_APP }}-pr-${{ github.event.pull_request.number }}"
+          echo "${{ secrets.PREVIEW_MNEMONIC }}" | flyctl secrets set MNEMONIC=- --app "$PREVIEW_APP" 2>/dev/null || true
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Create deployment status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ github.event.pull_request.number }};
+            const sha = context.payload.pull_request.head.sha;
+            const previewUrl = `https://${{ env.FLY_APP }}-pr-${prNumber}.fly.dev`;
+
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: sha,
+              environment: 'preview',
+              auto_merge: false,
+              required_contexts: [],
+              transient_environment: true,
+              production_environment: false,
+            });
+
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.data.id,
+              state: 'success',
+              environment_url: previewUrl,
+              log_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+      - name: Comment preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ github.event.pull_request.number }};
+            const sha = '${{ github.event.pull_request.head.sha }}'.slice(0, 7);
+            const previewUrl = `https://${{ env.FLY_APP }}-pr-${prNumber}.fly.dev`;
+            const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+            const body = `**Preview deployment ready!**\n\n${previewUrl}\n\nLast deployed: \`${sha}\` at ${timestamp}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('Preview deployment')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
