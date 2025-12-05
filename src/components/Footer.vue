@@ -1,5 +1,5 @@
 <template>
-  <footer class="w-full bg-[url('../assets/images/footer-bg.png')] bg-center bg-no-repeat bg-contain">
+  <footer class="w-full bg-center bg-no-repeat bg-contain">
     <div class="flex justify-between">
       <Vue3Lottie
         :animationData="WireworkCorner"

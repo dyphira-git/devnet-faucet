@@ -47,17 +47,16 @@ const faqs = [
   {
     question: 'How do I earn points?',
     answer:
-      'You can earn points by completing activities such as connecting your wallet, joining the community, and participating in events.',
+      'You can earn points by referring new users, interacting with the blockchain, and building on the Republic Chain to become eligible for potential grants.',
   },
   {
-    question: 'When are points updated?',
-    answer:
-      'Points are updated automatically every Friday at 00:00 UTC during the distribution cycle.',
+    question: 'When are points distributed?',
+    answer: 'Points are distributed every Friday at 00:00 UTC.',
   },
   {
-    question: 'What are points used for?',
+    question: 'Can I refer my own alternate accounts?',
     answer:
-      'Points can be used to access exclusive features, rewards, or airdrops based on your leaderboard position.',
+      'No. Republic actively monitors for sybil behavior and will slash any points earned through non-legitimate or automated activity. All points must be earned through genuine, human participation.',
   },
 ];
 </script>
