@@ -51,8 +51,7 @@ const faqs = [
   },
   {
     question: 'When are points distributed?',
-    answer:
-      'Points are distributed every Friday at 00:00 UTC.',
+    answer: 'Points are distributed every Friday at 00:00 UTC.',
   },
   {
     question: 'Can I refer my own alternate accounts?',
