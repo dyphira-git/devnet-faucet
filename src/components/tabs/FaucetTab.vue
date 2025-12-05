@@ -58,7 +58,7 @@
 
         <div class="space-y-2">
           <div>
-          <InputField :is-connected="hasConnectedWallets" className="!bg-transparent" placeholder="republic... or 0x..." v-model="address" :full-width="true">
+          <InputField :is-connected="hasConnectedWallets" className="!bg-transparent" placeholder="0x.. or republic1.." v-model="address" :full-width="true">
             <template v-if="hasConnectedWallets" #rightSection>
               <DropdownMenu>
                 <DropdownMenuTrigger as-child>
