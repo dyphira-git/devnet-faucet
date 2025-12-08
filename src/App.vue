@@ -53,10 +53,10 @@ const showWalletWarning = ref(false);
 // Provide the modal ref immediately during setup
 provide('appKitModal', modal);
 
-// Also provide a simple open function
+// Provide open function that opens the connect view
 const openAppKitModal = () => {
   if (modal.value?.open) {
-    modal.value.open();
+    modal.value.open({ view: 'Connect' });
   }
 };
 provide('openAppKitModal', openAppKitModal);
@@ -118,11 +118,11 @@ onMounted(async () => {
       icons: [`${window.location.origin}/favicon.svg`],
     };
 
-    // Create Wagmi adapter - disable legacy injected to use EIP-6963 for multi-wallet
+    // Create Wagmi adapter with both injected and EIP-6963 for best compatibility
     const wagmiAdapter = new WagmiAdapter({
       networks: [customNetwork],
       projectId,
-      enableInjected: false,
+      enableInjected: true,
       enableEIP6963: true,
     });
 
@@ -141,7 +141,7 @@ onMounted(async () => {
         metadata,
         defaultNetwork: customNetwork,
         enableWalletGuide: true,
-        enableReconnect: false,
+        enableReconnect: true,
         features: {
           analytics: false,
           email: false,

@@ -506,7 +506,7 @@ const formatBalance = (amount, decimals = 0) => {
   return num.toLocaleString();
 };
 
-// Auto-populate address when wallet connects
+// Auto-populate address when wallet connects or address changes
 watch(
   () => cosmosWallet.connected,
   (connected) => {
@@ -521,6 +521,27 @@ watch(
   (connected) => {
     if (connected && evmWallet.address && !address.value) {
       address.value = evmWallet.address;
+    }
+  }
+);
+
+// Update address when wallet account changes (user switches accounts in wallet)
+watch(
+  () => evmWallet.address,
+  (newAddress, oldAddress) => {
+    if (evmWallet.connected && newAddress && oldAddress && newAddress !== oldAddress) {
+      // User switched accounts - update the address field
+      address.value = newAddress;
+    }
+  }
+);
+
+watch(
+  () => cosmosWallet.address,
+  (newAddress, oldAddress) => {
+    if (cosmosWallet.connected && newAddress && oldAddress && newAddress !== oldAddress) {
+      // User switched accounts - update the address field
+      address.value = newAddress;
     }
   }
 );

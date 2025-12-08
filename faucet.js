@@ -67,9 +67,23 @@ const corsOptions = {
 if (process.env.NODE_ENV === 'production') {
   const staticPath = path.join(__dirname, 'dist');
   console.log('[STATIC] Serving static files from:', staticPath);
-  // Cache hashed assets (js/css) for 1 year, no cache for HTML
+
+  // Hashed assets cached for 1 year (content hash in filename ensures cache busting)
   app.use('/assets', express.static(path.join(staticPath, 'assets'), { maxAge: '1y' }));
-  app.use(express.static(staticPath, { maxAge: 0 }));
+
+  // HTML must never be cached to ensure users get latest asset references
+  app.use(
+    express.static(staticPath, {
+      maxAge: 0,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
+      },
+    })
+  );
 }
 
 app.use(cors(corsOptions));
@@ -544,15 +558,14 @@ async function sendEvmNativeTokens(recipientAddress, amount) {
   const privateKey = getPrivateKey();
   const wallet = new Wallet(privateKey, ethProvider);
 
-  // Estimate gas cost to reserve from faucet balance
-  const feeData = await ethProvider.getFeeData();
-  const gasLimit = BigInt(chainConf.tx.fee.evm.gasLimit || '21000');
-  const gasPrice = feeData.gasPrice || BigInt(chainConf.tx.fee.evm.gasPrice || '20000000000');
-  const estimatedGasCost = gasLimit * gasPrice;
+  // Debug: compare wallet address with our derived address
+  const ourEvmAddress = getEvmAddress();
+  console.log(`Wallet address (ethers): ${wallet.address}`);
+  console.log(`Our EVM address: ${ourEvmAddress}`);
 
-  const faucetBalance = await ethProvider.getBalance(wallet.address);
+  // Use our derived address for balance check (they should match, but just in case)
+  const faucetBalance = await ethProvider.getBalance(ourEvmAddress);
   console.log(`Faucet balance: ${faucetBalance.toString()} wei`);
-  console.log(`Estimated gas cost: ${estimatedGasCost.toString()} wei`);
 
   // Calculate max sendable amount (balance minus gas reserve)
   const maxSendable =

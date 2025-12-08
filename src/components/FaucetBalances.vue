@@ -144,7 +144,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, toRaw, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useConfig } from '../composables/useConfig';
 
 const props = defineProps({
@@ -407,22 +407,18 @@ const fetchBalances = async () => {
   }
 };
 
-// Watch for address changes
+// Watch for address changes - use immediate to handle initial load
 watch(
   () => props.address,
-  () => {
-    if (props.address && props.isValid) {
-      fetchBalances();
-    } else {
+  (newAddress, oldAddress) => {
+    // Clear balances and refetch when address changes
+    if (newAddress !== oldAddress) {
       tokenBalances.value = {};
     }
-  }
+    if (props.address && props.isValid) {
+      fetchBalances();
+    }
+  },
+  { immediate: true }
 );
-
-// Fetch balances on mount if address is already provided
-onMounted(() => {
-  if (props.address && props.isValid) {
-    fetchBalances();
-  }
-});
 </script>
