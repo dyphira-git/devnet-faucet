@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package.json yarn.lock ./
 
-# Install dependencies - skip optional native modules for faster builds
-RUN yarn install --frozen-lockfile --ignore-optional
+# Install dependencies (including platform-specific Rollup bindings for Vite build)
+RUN yarn install --frozen-lockfile
 
 # Copy source files
 COPY . .
