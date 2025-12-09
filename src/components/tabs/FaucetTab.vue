@@ -103,7 +103,6 @@
         
         <!-- Balances -->
         <FaucetBalances :address="address" :is-valid="isValidAddress" :hovering-wallet="hoveringWallet" @claim="requestToken" />
-      <!-- </div> -->
     </div>
     
   </div>
@@ -350,8 +349,6 @@ const requestToken = async () => {
 
       // Check if there's a custom message from the backend
       const customMessage = data.result?.message;
-      const _hasIneligibleTokens =
-        data.result?.ineligible_tokens && data.result.ineligible_tokens.length > 0;
 
       let messageContent = '';
       if (customMessage?.includes('ERC20 tokens')) {

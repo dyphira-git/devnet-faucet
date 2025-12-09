@@ -158,3 +158,6 @@ deployments/*.json
 .cursorrules
 .claude/
 CLAUDE.md
+
+# Playwright MCP artifacts
+.playwright-mcp/

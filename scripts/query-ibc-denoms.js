@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { parseArgs } from 'node:util';
-import fetch from 'node-fetch';
 
 // Parse command line arguments
 const { values: args } = parseArgs({

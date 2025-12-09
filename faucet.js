@@ -15,7 +15,6 @@ import { Any } from 'cosmjs-types/google/protobuf/any.js';
 import { JsonRpcProvider, Wallet } from 'ethers';
 import express from 'express';
 import Long from 'long';
-import fetch from 'node-fetch';
 import conf, {
   getCosmosAddress,
   getEvmAddress,
@@ -28,6 +27,11 @@ import logRotation from './src/logRotation.js';
 
 const app = express();
 const chainConf = conf.blockchain;
+
+// Constants
+const API_TIMEOUT_MS = 5000;
+const EVM_ADDRESS_LENGTH = 42;
+const LOW_BALANCE_THRESHOLD_PERCENT = 10; // Alert when faucet balance falls below 10% of distribution amount
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -81,7 +85,7 @@ function detectAddressType(address) {
   if (!address) return 'unknown';
 
   // EVM hex address
-  if (address.startsWith('0x') && address.length === 42) {
+  if (address.startsWith('0x') && address.length === EVM_ADDRESS_LENGTH) {
     const valid = /^0x[a-fA-F0-9]{40}$/.test(address);
     return valid ? 'evm' : 'unknown';
   }
@@ -143,13 +147,17 @@ async function getEvmBalance(address) {
   }
 }
 
-// Get balance via Cosmos REST
-async function getCosmosBalance(address) {
-  try {
-    const restEndpoint = chainConf.endpoints.rest_endpoint;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+/**
+ * Fetch all Cosmos balances for an address with timeout handling.
+ * @param {string} address - Cosmos bech32 address
+ * @returns {Promise<Array|null>} Array of balance objects or null on error
+ */
+async function fetchCosmosBalances(address) {
+  const restEndpoint = chainConf.endpoints.rest_endpoint;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
+  try {
     const response = await fetch(`${restEndpoint}/cosmos/bank/v1beta1/balances/${address}`, {
       signal: controller.signal,
     });
@@ -160,15 +168,29 @@ async function getCosmosBalance(address) {
     }
 
     const data = await response.json();
-    if (data.balances && Array.isArray(data.balances)) {
-      const tokenBalance = data.balances.find((b) => b.denom === chainConf.tx.amounts[0]?.denom);
-      return BigInt(tokenBalance?.amount || '0');
-    }
-    return BigInt(0);
+    return data.balances && Array.isArray(data.balances) ? data.balances : [];
   } catch (error) {
-    console.error('Error getting Cosmos balance:', error);
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      console.error('Cosmos balance request timed out');
+    } else {
+      console.error('Error fetching Cosmos balances:', error);
+    }
     return null;
   }
+}
+
+/**
+ * Get native token balance via Cosmos REST (for threshold checking).
+ * @param {string} address - Cosmos bech32 address
+ * @returns {Promise<BigInt|null>} Balance as BigInt or null on error
+ */
+async function getCosmosBalance(address) {
+  const balances = await fetchCosmosBalances(address);
+  if (!balances) return null;
+
+  const tokenBalance = balances.find((b) => b.denom === chainConf.tx.amounts[0]?.denom);
+  return BigInt(tokenBalance?.amount || '0');
 }
 
 // Get recipient balance checking both address formats (same underlying account)
@@ -406,36 +428,16 @@ app.get('/balance/:type', async (req, res) => {
         ? address
         : getCosmosAddress();
 
-      const restEndpoint = chainConf.endpoints.rest_endpoint;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-      try {
-        const response = await fetch(
-          `${restEndpoint}/cosmos/bank/v1beta1/balances/${targetAddress}`,
-          { signal: controller.signal }
-        );
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.balances && Array.isArray(data.balances)) {
-            for (const balance of data.balances) {
-              const token = chainConf.tx.amounts.find((t) => t.denom === balance.denom);
-              balances.push({
-                denom: balance.denom,
-                amount: balance.amount,
-                type: 'native',
-                decimals: token?.decimals || 6,
-              });
-            }
-          }
-        }
-      } catch (fetchError) {
-        if (fetchError.name === 'AbortError') {
-          console.error('Cosmos balance request timed out');
-        } else {
-          console.error('Cosmos balance fetch error:', fetchError);
+      const cosmosBalances = await fetchCosmosBalances(targetAddress);
+      if (cosmosBalances) {
+        for (const balance of cosmosBalances) {
+          const token = chainConf.tx.amounts.find((t) => t.denom === balance.denom);
+          balances.push({
+            denom: balance.denom,
+            amount: balance.amount,
+            type: 'native',
+            decimals: token?.decimals || 6,
+          });
         }
       }
     }
@@ -522,6 +524,11 @@ app.get('/send/:address', async (req, res) => {
         addresses,
         ...txResult,
       },
+    });
+
+    // Check balance after successful send (async, non-blocking)
+    checkFaucetBalanceAlert().catch(() => {
+      /* intentionally swallowed */
     });
   } catch (error) {
     console.error('Faucet error:', error);
@@ -707,7 +714,39 @@ async function initializeFaucet() {
     compress: false,
   });
 
+  // Check balance on startup
+  await checkFaucetBalanceAlert();
+
   console.log(' Faucet server ready!');
+}
+
+/**
+ * Check faucet balance and log alert if below threshold.
+ * Designed for external log aggregation/alerting systems.
+ */
+async function checkFaucetBalanceAlert() {
+  try {
+    const distributionAmount = BigInt(chainConf.tx.amounts[0]?.amount || '10000000000000000000');
+    const alertThreshold =
+      (distributionAmount * BigInt(LOW_BALANCE_THRESHOLD_PERCENT)) / BigInt(100);
+    const tokenSymbol = chainConf.tx.amounts[0]?.symbol || 'tokens';
+    const decimals = chainConf.tx.amounts[0]?.decimals || 18;
+
+    // Check EVM balance
+    const ethProvider = new JsonRpcProvider(chainConf.endpoints.evm_endpoint);
+    const evmBalance = await ethProvider.getBalance(getEvmAddress());
+
+    if (evmBalance < alertThreshold) {
+      const balanceFormatted = (Number(evmBalance) / 10 ** decimals).toFixed(4);
+      const thresholdFormatted = (Number(alertThreshold) / 10 ** decimals).toFixed(4);
+      console.error(
+        `[ALERT] LOW_FAUCET_BALANCE: EVM balance ${balanceFormatted} ${tokenSymbol} is below threshold ${thresholdFormatted} ${tokenSymbol}. ` +
+          `Address: ${getEvmAddress()}`
+      );
+    }
+  } catch (error) {
+    console.error('[ALERT] BALANCE_CHECK_FAILED: Unable to check faucet balance:', error.message);
+  }
 }
 
 // Graceful shutdown

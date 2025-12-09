@@ -12,7 +12,7 @@
         <strong>Multiple Wallet Extensions Detected</strong>
         <p class="mb-2 mt-2">You have multiple wallet extensions installed which may cause connection issues.</p>
         <p class="mb-0">For best results, disable all wallet extensions except the one you want to use (e.g., MetaMask).</p>
-        <button type="button" class="btn-close" @click="showWalletWarning = false" aria-label="Close"></button>
+        <button type="button" class="btn-close" @click="dismissWarning" aria-label="Close"></button>
       </div>
       <Tabs />
 
@@ -29,45 +29,29 @@
 </template>
 
 <script setup>
-import { createAppKit } from '@reown/appkit';
-import { defineChain } from '@reown/appkit/networks';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { onMounted, provide, ref } from 'vue';
+import { onMounted, provide } from 'vue';
 import { Toaster } from 'vue-sonner';
 import FAQs from './components/FAQs.vue';
 import Footer from './components/Footer.vue';
 import Header from './components/Header.vue';
 import Tabs from './components/Tabs.vue';
+import { useAppKit } from './composables/useAppKit';
 import { useConfig } from './composables/useConfig';
 import { useWalletStore } from './composables/useWalletStore';
 import DividerLine from './svg/DividerLine.vue';
 
-// Load configuration
 const { config, loadConfig } = useConfig();
 const walletStore = useWalletStore();
+const { modal, showWalletWarning, initializeAppKit, openModal, disconnect } = useAppKit();
 
-// Initialize Reown AppKit - use ref to make it reactive
-const modal = ref(null);
-const showWalletWarning = ref(false);
-
-// Provide the modal ref immediately during setup
+// Provide wallet functions to child components
 provide('appKitModal', modal);
+provide('openAppKitModal', openModal);
+provide('disconnectAppKit', disconnect);
 
-// Also provide a simple open function
-const openAppKitModal = () => {
-  if (modal.value?.open) {
-    modal.value.open();
-  }
+const dismissWarning = () => {
+  showWalletWarning.value = false;
 };
-provide('openAppKitModal', openAppKitModal);
-
-// Provide disconnect function
-const disconnectAppKit = async () => {
-  if (modal.value?.disconnect) {
-    await modal.value.disconnect();
-  }
-};
-provide('disconnectAppKit', disconnectAppKit);
 
 onMounted(async () => {
   try {
@@ -81,122 +65,17 @@ onMounted(async () => {
   }
 
   if (config.value?.network) {
-    const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || '2f30532234e2903b2cf2505d144089ac';
-    const chainId = config.value.network.evm.chainId;
-    const rpcUrl = config.value.network.evm.rpc;
-    const explorerUrl = config.value.network.evm.explorer || 'https://explorer.republicai.io';
-
-    // Use defineChain to properly create custom network
-    const customNetwork = defineChain({
-      id: chainId,
-      caipNetworkId: `eip155:${chainId}`,
-      chainNamespace: 'eip155',
-      name: 'Republic AI Devnet',
-      nativeCurrency: {
-        decimals: 18,
-        name: 'RAI',
-        symbol: 'RAI',
-      },
-      rpcUrls: {
-        default: {
-          http: [rpcUrl],
-        },
-      },
-      blockExplorers: {
-        default: {
-          name: 'Explorer',
-          url: explorerUrl,
-        },
-      },
-      testnet: true,
-    });
-
-    const metadata = {
-      name: 'Republic AI Devnet Faucet',
-      description: 'Token distribution faucet for Republic AI Devnet',
-      url: window.location.origin,
-      icons: [`${window.location.origin}/favicon.svg`],
-    };
-
-    // Create Wagmi adapter - disable legacy injected to use EIP-6963 for multi-wallet
-    const wagmiAdapter = new WagmiAdapter({
-      networks: [customNetwork],
-      projectId,
-      enableInjected: false,
-      enableEIP6963: true,
-    });
-
-    // Create AppKit modal
-    try {
-      // Check for multiple wallet providers
-      if (window.ethereum?.providers && window.ethereum.providers.length > 1) {
-        console.warn('Multiple wallet providers detected');
-        showWalletWarning.value = true;
+    await initializeAppKit(config.value, (account) => {
+      if (account.isConnected) {
+        walletStore.evmWallet.connected = true;
+        walletStore.evmWallet.address = account.address;
+        walletStore.evmWallet.chainId = account.chainId;
+      } else {
+        walletStore.evmWallet.connected = false;
+        walletStore.evmWallet.address = null;
+        walletStore.evmWallet.chainId = null;
       }
-
-      const appKitInstance = createAppKit({
-        adapters: [wagmiAdapter],
-        networks: [customNetwork],
-        projectId,
-        metadata,
-        defaultNetwork: customNetwork,
-        enableWalletGuide: true,
-        enableReconnect: false,
-        features: {
-          analytics: false,
-          email: false,
-          socials: false,
-          swaps: false,
-          onramp: false,
-        },
-      });
-
-      modal.value = appKitInstance;
-      console.log('Wallet connector initialized');
-    } catch (error) {
-      console.error('Failed to create AppKit modal:', error);
-    }
-
-    // Subscribe to account changes
-    if (modal.value) {
-      let updateTimeout = null;
-      let lastAddress = null;
-      const updateWalletState = (isConnected, address, chainId) => {
-        clearTimeout(updateTimeout);
-        updateTimeout = setTimeout(() => {
-          if (isConnected && address) {
-            // Only log if address changed
-            if (address !== lastAddress) {
-              console.log('EVM wallet connected:', address);
-              lastAddress = address;
-            }
-            walletStore.evmWallet.connected = true;
-            walletStore.evmWallet.address = address;
-            walletStore.evmWallet.chainId = chainId;
-          } else {
-            lastAddress = null;
-            walletStore.evmWallet.connected = false;
-            walletStore.evmWallet.address = null;
-            walletStore.evmWallet.chainId = null;
-          }
-        }, 100);
-      };
-
-      if (modal.value.subscribeAccount) {
-        modal.value.subscribeAccount((account) => {
-          updateWalletState(account.isConnected, account.address, account.chainId);
-        });
-      }
-
-      setTimeout(() => {
-        if (modal.value?.getAccount) {
-          const account = modal.value.getAccount();
-          if (account?.isConnected && account.address) {
-            updateWalletState(true, account.address, account.chainId);
-          }
-        }
-      }, 500);
-    }
+    });
   }
 });
 </script>
@@ -223,12 +102,12 @@ onMounted(async () => {
     padding-left: 1rem;
     padding-right: 1rem;
   }
-  
+
   .alert {
     font-size: 0.9rem;
     padding: 0.75rem 1rem;
   }
-  
+
   .alert-heading {
     font-size: 1rem;
   }
@@ -239,12 +118,12 @@ onMounted(async () => {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
-  
+
   .alert {
     font-size: 0.85rem;
     padding: 0.65rem 0.85rem;
   }
-  
+
   .alert p {
     margin-bottom: 0.5rem !important;
   }

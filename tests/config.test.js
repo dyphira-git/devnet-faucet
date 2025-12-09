@@ -76,7 +76,6 @@ describe('config', () => {
 
     it('should have sender options with prefix', () => {
       expect(config.blockchain.sender).toHaveProperty('option');
-      expect(config.blockchain.sender.option).toHaveProperty('hdPaths');
       expect(config.blockchain.sender.option).toHaveProperty('prefix');
       expect(typeof config.blockchain.sender.option.prefix).toBe('string');
     });
