@@ -1,4 +1,3 @@
-import { stringToPath } from '@cosmjs/crypto';
 import secureKeyManager from './src/SecureKeyManager.js';
 
 const config = {
@@ -26,7 +25,6 @@ const config = {
     },
     sender: {
       option: {
-        hdPaths: [stringToPath("m/44'/60'/0'/0/0")],
         prefix: 'republic',
       },
     },
