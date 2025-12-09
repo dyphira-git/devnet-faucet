@@ -61,14 +61,22 @@
                   {{ formatBalance(tokenBalances[token.denom.toLowerCase()].current_amount || tokenBalances[token.denom.toLowerCase()].amount, tokenBalances[token.denom.toLowerCase()].decimals || token.decimals) }}
                 </span>
               </div>
-              <div v-if="address && isValid" class="flex items-center gap-1.5 text-[10px] pt-1">
-                <span v-if="getTokenStatus(token) === 'available'" class="w-1.5 h-1.5 rounded-full bg-[#30FF6E] shadow-[0_0_8px_rgba(48,255,110,0.8)] animate-pulse-subtle flex-shrink-0"></span>
-                <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)] flex-shrink-0"></span>
-                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] flex-shrink-0"></span>
+              <div v-if="address && isValid" class="space-y-1 pt-1">
+                <div class="flex items-center gap-1.5 text-[10px]">
+                  <span v-if="getTokenStatus(token) === 'available'" class="w-1.5 h-1.5 rounded-full bg-[#30FF6E] shadow-[0_0_8px_rgba(48,255,110,0.8)] animate-pulse-subtle flex-shrink-0"></span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)] flex-shrink-0"></span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] flex-shrink-0"></span>
 
-                <span v-if="getTokenStatus(token) === 'available'" class="text-[#30FF6E] font-semibold">Available</span>
-                <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-400 font-semibold">Maxed</span>
-                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500 font-semibold">Incompatible</span>
+                  <span v-if="getTokenStatus(token) === 'available'" class="text-[#30FF6E] font-semibold">Available</span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-400 font-semibold">At Maximum</span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500 font-semibold">Incompatible</span>
+                </div>
+                <!-- Explanatory text for status -->
+                <div class="text-[9px] text-[#626C71] leading-tight">
+                  <span v-if="getTokenStatus(token) === 'available'">Tap to receive tokens</span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'">Balance at faucet limit ({{ formatBalance(getTargetAmount(token), token.decimals || 18) }} {{ getTokenSymbol(token) }})</span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'">Not available for this address type</span>
+                </div>
               </div>
             </div>
           </div>
@@ -125,14 +133,26 @@
               </div>
 
               <!-- Status Indicator -->
-              <div v-if="address && isValid" class="flex items-center gap-1.5 text-xs">
-                <span v-if="getTokenStatus(token) === 'available'" class="w-1.5 h-1.5 rounded-full bg-[#30FF6E] shadow-[0_0_8px_rgba(48,255,110,0.8)] animate-pulse-subtle flex-shrink-0"></span>
-                <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)] flex-shrink-0"></span>
-                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] flex-shrink-0"></span>
+              <div v-if="address && isValid" class="space-y-1">
+                <div class="flex items-center gap-1.5 text-xs">
+                  <span v-if="getTokenStatus(token) === 'available'" class="w-1.5 h-1.5 rounded-full bg-[#30FF6E] shadow-[0_0_8px_rgba(48,255,110,0.8)] animate-pulse-subtle flex-shrink-0"></span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)] flex-shrink-0"></span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] flex-shrink-0"></span>
 
-                <span v-if="getTokenStatus(token) === 'available'" class="text-[#30FF6E] font-semibold text-[10px]">Available</span>
-                <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-400 font-semibold text-[10px]">Maxed</span>
-                <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500 font-semibold text-[10px]">Incompatible</span>
+                  <span v-if="getTokenStatus(token) === 'available'" class="text-[#30FF6E] font-semibold text-[10px]">Available</span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'" class="text-yellow-400 font-semibold text-[10px]">At Maximum</span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'" class="text-red-500 font-semibold text-[10px]">Incompatible</span>
+                </div>
+                <!-- Explanatory text for status -->
+                <div class="text-[9px] text-[#626C71] leading-tight">
+                  <span v-if="getTokenStatus(token) === 'available'">Click to receive tokens</span>
+                  <span v-else-if="getTokenStatus(token) === 'maxed'">Balance at faucet limit ({{ formatBalance(getTargetAmount(token), token.decimals || 18) }} {{ getTokenSymbol(token) }})</span>
+                  <span v-else-if="getTokenStatus(token) === 'incompatible'">Not available for this address type</span>
+                </div>
+              </div>
+              <!-- Help text when no address entered -->
+              <div v-else class="text-[9px] text-[#626C71] leading-tight">
+                Enter an address above to check eligibility
               </div>
             </div>
           </div>
@@ -302,12 +322,17 @@ const getClaimPercentage = (token) => {
   return (claimable / target) * 100;
 };
 
-const getClaimableAmountRaw = (token) => {
+const getTargetAmount = (token) => {
   const balance = tokenBalances.value[token.denom.toLowerCase()];
   // Use balance's target_amount if available, otherwise fall back to token config
-  const target = balance?.target_amount
+  return balance?.target_amount
     ? Number.parseFloat(balance.target_amount)
     : Number.parseFloat(token.target_balance || token.amount || 0);
+};
+
+const getClaimableAmountRaw = (token) => {
+  const balance = tokenBalances.value[token.denom.toLowerCase()];
+  const target = getTargetAmount(token);
 
   if (!balance) return target;
 
