@@ -181,7 +181,7 @@
               </li>
               <li>
                 <a
-                  href="https://cdn.prod.website-files.com/68c6ab111eb5a797aedfa7bd/68dbb0e416c94898cf96e570_Republic_L1_WhitePaper.pdf"
+                  href="https://whitepaper.republicai.io/"
                   class="transition hover:text-white"
                   target="_blank"
                 >
@@ -190,7 +190,7 @@
               </li>
               <li>
                 <a
-                  href="https://docs.republicai.io/"
+                  href="https://explorer.republicai.io/"
                   class="transition hover:text-white"
                   target="_blank"
                 >
@@ -208,7 +208,7 @@
             <ul class="space-y-1.5 font-primary sm:space-y-2 text-xs sm:text-sm text-[#DDF4FFBF]">
               <li>
                 <a
-                  href="https://docs.republicai.io/"
+                  href="https://points.republicai.io/privacy"
                   class="transition hover:text-white"
                   target="_blank"
                 >
@@ -217,7 +217,7 @@
               </li>
               <li>
                 <a
-                  href="https://docs.republicai.io/"
+                  href="https://points.republicai.io/terms"
                   class="transition hover:text-white"
                   target="_blank"
                 >
