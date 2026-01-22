@@ -3,29 +3,29 @@ import secureKeyManager from './src/SecureKeyManager.js';
 const config = {
   port: 8088,
   project: {
-    name: 'Republic Devnet Faucet',
+    name: 'RAI Testnet Faucet',
     logo: '',
     deployer: '<a href="https://republicai.io">Republic AI</a>',
   },
   blockchain: {
-    name: 'republic',
+    name: 'raitestnet',
     type: 'DualEnvironment',
     ids: {
       chainId: 77701,
-      cosmosChainId: 'republic_77701-1',
+      cosmosChainId: 'raitestnet_77701-1',
     },
     endpoints: {
-      rpc_endpoint: 'https://rpc.republicai.io:26657',
-      grpc_endpoint: 'rpc.republicai.io:9090',
-      rest_endpoint: 'https://rpc.republicai.io:1317',
-      evm_endpoint: 'https://rpc.republicai.io:8545',
-      evm_websocket: 'wss://rpc.republicai.io:8546',
-      evm_explorer: 'https://explorer.republicai.io',
-      cosmos_explorer: 'https://explorer.republicai.io',
+      rpc_endpoint: 'https://rpc.republicai.io',
+      grpc_endpoint: 'grpc.republicai.io:9090',
+      rest_endpoint: 'https://rest.republicai.io',
+      evm_endpoint: 'https://evm-rpc.republicai.io',
+      evm_websocket: 'wss://evm-rpc.republicai.io',
+      evm_explorer: '',
+      cosmos_explorer: '',
     },
     sender: {
       option: {
-        prefix: 'republic',
+        prefix: 'rai',
       },
     },
     tx: {

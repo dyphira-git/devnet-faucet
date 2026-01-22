@@ -1,7 +1,4 @@
 import 'dotenv/config';
-import fs from 'node:fs';
-import path, { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { toBase64 } from '@cosmjs/encoding';
 import { makeAuthInfoBytes, makeSignDoc } from '@cosmjs/proto-signing';
 import { accountFromAny } from '@cosmjs/stargate';
@@ -33,29 +30,28 @@ const API_TIMEOUT_MS = 5000;
 const EVM_ADDRESS_LENGTH = 42;
 const LOW_BALANCE_THRESHOLD_PERCENT = 10; // Alert when faucet balance falls below 10% of distribution amount
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// API Key for authentication (required for /send endpoint)
+const FAUCET_API_KEY = process.env.FAUCET_API_KEY;
+if (!FAUCET_API_KEY) {
+  console.error('[FATAL] FAUCET_API_KEY environment variable is required');
+  process.exit(1);
+}
 
-// CORS configuration
+// CORS configuration - restricted to points-webapp domains only
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'https://faucet.republicai.io',
-      'https://republic-devnet-faucet.fly.dev',
-      'https://faucet.cosmos-evm.com',
-      'https://cosmos-evm.com',
-      'https://faucet.basementnodes.ca',
-      'https://devnet-faucet.fly.dev',
+      'https://points.republicai.io',
+      'https://staging.points.republicai.io',
       'http://localhost:3000',
-      'http://localhost:8088',
     ];
 
+    // Allow requests with no origin (server-to-server calls)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     if (process.env.NODE_ENV === 'development') return callback(null, true);
 
-    const localNetworkPattern = /^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/;
-    if (localNetworkPattern.test(origin)) return callback(null, true);
+    // Allow localhost in development
     if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
       return callback(null, true);
     }
@@ -63,17 +59,34 @@ const corsOptions = {
     callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   credentials: true,
 };
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  const staticPath = path.join(__dirname, 'dist');
-  console.log('[STATIC] Serving static files from:', staticPath);
-  // Cache hashed assets (js/css) for 1 year, no cache for HTML
-  app.use('/assets', express.static(path.join(staticPath, 'assets'), { maxAge: '1y' }));
-  app.use(express.static(staticPath, { maxAge: 0 }));
+/**
+ * API Key authentication middleware.
+ * Requires X-API-Key header to match FAUCET_API_KEY.
+ */
+function requireApiKey(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+
+  if (!apiKey) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized',
+      message: 'API key required',
+    });
+  }
+
+  if (apiKey !== FAUCET_API_KEY) {
+    return res.status(403).json({
+      success: false,
+      error: 'Forbidden',
+      message: 'Invalid API key',
+    });
+  }
+
+  next();
 }
 
 app.use(cors(corsOptions));
@@ -448,81 +461,115 @@ app.get('/balance/:type', async (req, res) => {
   res.send({ balances, type });
 });
 
-// Main faucet endpoint
-app.get('/send/:address', async (req, res) => {
+// Main faucet endpoint (requires API key authentication)
+// Accepts optional ?amount= query parameter for role-based token amounts
+app.get('/send/:address', requireApiKey, async (req, res) => {
   const { address } = req.params;
+  const { amount: requestedAmount } = req.query;
 
-  console.log(`[FAUCET] Token request - Address: ${address}`);
+  console.log(
+    `[FAUCET] Token request - Address: ${address}, Requested amount: ${requestedAmount || 'default'}`
+  );
 
   if (!address) {
-    res.send({ result: 'Address is required!' });
-    return;
+    return res.status(400).json({
+      status: 'error',
+      error: 'Address is required',
+      message: 'Address is required',
+    });
   }
 
   const addressType = detectAddressType(address);
 
   if (addressType === 'unknown') {
-    res.send({
-      result: `Address [${address}] is not supported. Must be a valid ${conf.blockchain.sender.option.prefix} address or hex address (0x...)`,
+    return res.status(400).json({
+      status: 'error',
+      error: 'InvalidAddress',
+      message: `Address [${address}] is not supported. Must be a valid ${conf.blockchain.sender.option.prefix} address or hex address (0x...)`,
     });
-    return;
   }
 
-  // Get the alternate address format (same underlying account)
-  const alternateAddress = getAlternateAddress(address, addressType);
-  const addresses = {
-    evm: addressType === 'evm' ? address : alternateAddress,
-    cosmos: addressType === 'cosmos' ? address : alternateAddress,
-  };
-
   try {
-    // Check recipient balance and calculate top-up amount
+    // Check recipient balance
     const recipientBalance = await getRecipientBalance(address, addressType);
     const threshold = BigInt(chainConf.balanceThreshold);
     const tokenSymbol = chainConf.tx.amounts[0]?.symbol || 'tokens';
     const decimals = chainConf.tx.amounts[0]?.decimals || 18;
 
-    if (recipientBalance >= threshold) {
-      const balanceFormatted = (Number(recipientBalance) / 10 ** decimals).toFixed(4);
-      const thresholdFormatted = (Number(threshold) / 10 ** decimals).toFixed(0);
+    // Determine amount to send:
+    // 1. If requestedAmount is provided, use it (capped by threshold - balance)
+    // 2. Otherwise, top up to threshold
+    let sendAmount;
 
-      res.send({
-        result: {
-          code: -2,
-          message: 'Balance threshold exceeded',
-          details: `Address ${address} already has ${balanceFormatted} ${tokenSymbol}. Faucet only tops up wallets below ${thresholdFormatted} ${tokenSymbol}.`,
-          addresses,
-        },
-      });
-      return;
+    if (requestedAmount) {
+      // Use requested amount from points-webapp (role-based)
+      const requested = BigInt(requestedAmount);
+      const maxAllowed = threshold - recipientBalance;
+
+      // Cap at threshold to prevent over-funding
+      sendAmount = requested > maxAllowed ? maxAllowed : requested;
+
+      if (sendAmount <= BigInt(0)) {
+        const balanceFormatted = (Number(recipientBalance) / 10 ** decimals).toFixed(4);
+        const thresholdFormatted = (Number(threshold) / 10 ** decimals).toFixed(0);
+
+        return res.status(400).json({
+          status: 'error',
+          error: 'BalanceThresholdExceeded',
+          message: `Address already has ${balanceFormatted} ${tokenSymbol}. Faucet only tops up wallets below ${thresholdFormatted} ${tokenSymbol}.`,
+          balance: {
+            before: recipientBalance.toString(),
+            after: recipientBalance.toString(),
+          },
+        });
+      }
+    } else {
+      // Default behavior: top up to threshold
+      if (recipientBalance >= threshold) {
+        const balanceFormatted = (Number(recipientBalance) / 10 ** decimals).toFixed(4);
+        const thresholdFormatted = (Number(threshold) / 10 ** decimals).toFixed(0);
+
+        return res.status(400).json({
+          status: 'error',
+          error: 'BalanceThresholdExceeded',
+          message: `Address already has ${balanceFormatted} ${tokenSymbol}. Faucet only tops up wallets below ${thresholdFormatted} ${tokenSymbol}.`,
+          balance: {
+            before: recipientBalance.toString(),
+            after: recipientBalance.toString(),
+          },
+        });
+      }
+      sendAmount = threshold - recipientBalance;
     }
 
-    // Calculate the amount to send (top up to threshold)
-    const topUpAmount = threshold - recipientBalance;
-    const topUpFormatted = (Number(topUpAmount) / 10 ** decimals).toFixed(4);
+    const sendFormatted = (Number(sendAmount) / 10 ** decimals).toFixed(4);
     const balanceFormatted = (Number(recipientBalance) / 10 ** decimals).toFixed(4);
 
     console.log(
       `Processing faucet request for ${address} (type: ${addressType})`,
       `- Current balance: ${balanceFormatted} ${tokenSymbol}`,
-      `- Top-up amount: ${topUpFormatted} ${tokenSymbol}`
+      `- Send amount: ${sendFormatted} ${tokenSymbol}`
     );
 
     let txResult;
 
     if (addressType === 'evm') {
-      txResult = await sendEvmNativeTokens(address, topUpAmount);
+      txResult = await sendEvmNativeTokens(address, sendAmount);
     } else {
-      txResult = await sendCosmosNativeTokens(address, topUpAmount);
+      txResult = await sendCosmosNativeTokens(address, sendAmount);
     }
 
-    res.send({
-      result: {
-        code: 0,
-        status: 'success',
-        message: 'Tokens sent successfully!',
-        addresses,
-        ...txResult,
+    // Calculate new balance (approximate)
+    const newBalance = recipientBalance + sendAmount;
+
+    res.json({
+      status: 'success',
+      message: 'Tokens sent successfully!',
+      txHash: txResult.transaction_hash,
+      amount: txResult.amount,
+      balance: {
+        before: recipientBalance.toString(),
+        after: newBalance.toString(),
       },
     });
 
@@ -532,13 +579,10 @@ app.get('/send/:address', async (req, res) => {
     });
   } catch (error) {
     console.error('Faucet error:', error);
-    res.send({
-      result: {
-        code: -1,
-        message: error.message || 'Transaction failed',
-        error: error.toString(),
-        addresses,
-      },
+    res.status(500).json({
+      status: 'error',
+      error: 'TransactionFailed',
+      message: error.message || 'Transaction failed',
     });
   }
 });
@@ -768,22 +812,9 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Catch-all for Vue Router
-app.get('*', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    if (req.path.includes('.')) {
-      res.status(404).send('Not found');
-    } else {
-      const indexPath = path.join(__dirname, 'dist', 'index.html');
-      if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-      } else {
-        res.status(500).send('Application build not found.');
-      }
-    }
-  } else {
-    res.status(404).json({ error: 'Not found' });
-  }
+// 404 handler for unknown routes
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
 });
 
 // Start server
