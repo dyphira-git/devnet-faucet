@@ -35,7 +35,7 @@ const config = {
           denom: 'arai',
           symbol: 'RAI',
           name: 'Republic AI',
-          amount: '10000000000000000000', // Max 10 RAI (18 decimals) - actual sent = threshold - balance
+          amount: '1000000000000000000', // Max 1 RAI (18 decimals) - actual sent = threshold - balance
           decimals: 18,
           display_denom: 'RAI',
         },
@@ -51,8 +51,8 @@ const config = {
         },
       },
     },
-    // Balance threshold: only top up wallets below this amount (10 tokens with 18 decimals)
-    balanceThreshold: '10000000000000000000',
+    // Balance threshold: only top up wallets below this amount (1 token with 18 decimals)
+    balanceThreshold: '1000000000000000000',
   },
 };
 
